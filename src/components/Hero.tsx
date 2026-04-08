@@ -31,16 +31,7 @@ function WindowsIcon() {
         />
     );
 }
-function DebIcon() {
-    return (
-        <Image
-            src="/icons/pkgs/debian.svg"
-            width={18}
-            height={18}
-            alt="debian"
-        />
-    );
-}
+
 function AppImageIcon() {
     return (
         <Image
@@ -51,6 +42,18 @@ function AppImageIcon() {
         />
     );
 }
+
+function DebIcon() {
+    return (
+        <Image
+            src="/icons/pkgs/debian.svg"
+            width={18}
+            height={18}
+            alt="debian"
+        />
+    );
+}
+
 function PkgIcon() {
     return (
         <Image
@@ -95,14 +98,6 @@ export default function Hero() {
             iconClass: "win",
         },
         {
-            icon: <DebIcon />,
-            label: "Debian",
-            name: ".deb",
-            href: debAsset?.browser_download_url ?? release?.html_url ?? "#",
-            size: debAsset ? formatSize(debAsset.size) : null,
-            iconClass: "deb",
-        },
-        {
             icon: <AppImageIcon />,
             label: "Linux",
             name: ".AppImage",
@@ -110,6 +105,14 @@ export default function Hero() {
                 appImageAsset?.browser_download_url ?? release?.html_url ?? "#",
             size: appImageAsset ? formatSize(appImageAsset.size) : null,
             iconClass: "appimage",
+        },
+        {
+            icon: <DebIcon />,
+            label: "Debian",
+            name: ".deb",
+            href: debAsset?.browser_download_url ?? release?.html_url ?? "#",
+            size: debAsset ? formatSize(debAsset.size) : null,
+            iconClass: "deb",
         },
         {
             icon: <PkgIcon />,

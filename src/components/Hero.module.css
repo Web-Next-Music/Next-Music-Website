@@ -89,13 +89,13 @@
 }
 
 .win {
-    background: #80b3ff30;
-}
-.deb {
-    background: #a81d3330;
+    background: #0174cf30;
 }
 .appimage {
     background: #739fb930;
+}
+.deb {
+    background: #a81d3330;
 }
 .pkg {
     background: #1793d130;
