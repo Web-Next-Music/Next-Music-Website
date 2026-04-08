@@ -6,7 +6,7 @@ export default function Header() {
         <header className={styles.header}>
             <div className={styles.logo}>
                 <div className={styles.logoImg} />
-                Next Music
+                <div className={styles.logoText}>Next Music</div>
             </div>
             <nav className={styles.nav}>
                 <Link href="/">Home</Link>

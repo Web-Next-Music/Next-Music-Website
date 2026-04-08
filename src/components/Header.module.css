@@ -57,10 +57,10 @@
 
 @media (max-width: 900px) {
     .header {
-        justify-content: center;
+        padding: 10px;
     }
 
-    .logo {
+    .logoText {
         display: none;
     }
 }
