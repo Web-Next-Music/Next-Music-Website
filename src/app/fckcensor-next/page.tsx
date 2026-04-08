@@ -2,7 +2,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FckCensorTabs from "@/components/FckCensorTabs";
 import Image from "next/image";
-import { fetchOfficialTracks, fetchLegacyTracks } from "@/lib/fckcensor";
 import styles from "./page.module.css";
 
 export const metadata = {
@@ -19,12 +18,7 @@ const GitHubIcon = () => (
     </svg>
 );
 
-export default async function FckCensorPage() {
-    const [official, legacy] = await Promise.all([
-        fetchOfficialTracks(),
-        fetchLegacyTracks(),
-    ]);
-
+export default function FckCensorPage() {
     return (
         <>
             <Header />
@@ -54,8 +48,6 @@ export default async function FckCensorPage() {
                         GitHub
                     </a>
                 </div>
-
-                {/* ── Credits block ── */}
                 <div className={styles.creditsBlock}>
                     <Image
                         src="https://avatars.githubusercontent.com/Hazzz895"
@@ -64,7 +56,6 @@ export default async function FckCensorPage() {
                         height={48}
                         className={styles.creditsAvatar}
                     />
-
                     <div className={styles.creditsInfo}>
                         <div className={styles.creditsName}>Special thanks</div>
                         <p className={styles.creditsDesc}>
@@ -77,13 +68,11 @@ export default async function FckCensorPage() {
                             >
                                 @Hazzz895
                             </a>{" "}
-                            of the "FckCensor" script
+                            of the &quot;FckCensor&quot; script
                         </p>
                     </div>
                 </div>
-
-                {/* ── Tabs ── */}
-                <FckCensorTabs official={official} legacy={legacy} />
+                <FckCensorTabs />
             </main>
             <Footer />
         </>

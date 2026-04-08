@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import type { OfficialTrack, LegacyTrack } from "@/lib/fckcensor";
+import {
+    M3U_URL,
+    LEGACY_URL,
+    parseM3U,
+    parseLegacy,
+    type OfficialTrack,
+    type LegacyTrack,
+} from "@/lib/fckcensor";
 import styles from "./FckCensorTabs.module.css";
 
 const PAGE_SIZE = 20;
@@ -18,29 +25,18 @@ const HASH_TO_TAB: Record<string, TabId> = {
     "#json": "legacy",
 };
 
-/** Returns the default tab.
- *  Falls back to "official" (M3U) when on the /fckcensor-next/ root
- *  (no hash present) so that direct visits open M3U by default. */
 function getTabFromHash(): TabId {
     if (typeof window === "undefined") return "official";
     const hash = window.location.hash.toLowerCase();
-    if (!hash) return "official"; // root → M3U tab
+    if (!hash) return "official";
     return HASH_TO_TAB[hash] ?? "official";
 }
-
-interface Props {
-    official: OfficialTrack[];
-    legacy: LegacyTrack[];
-    jsonUrl?: string;
-    m3uUrl?: string;
-}
-
-// ---------- Search bar ----------
 
 interface SearchBarProps {
     value: string;
     onChange: (v: string) => void;
 }
+
 function SearchBar({ value, onChange }: SearchBarProps) {
     return (
         <div className={styles.searchWrap}>
@@ -68,7 +64,7 @@ function SearchBar({ value, onChange }: SearchBarProps) {
             <input
                 className={styles.searchInput}
                 type="text"
-                placeholder="Search by title, artist or ID…"
+                placeholder="Search by title, artist or ID..."
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 spellCheck={false}
@@ -79,19 +75,18 @@ function SearchBar({ value, onChange }: SearchBarProps) {
                     onClick={() => onChange("")}
                     aria-label="Clear"
                 >
-                    ×
+                    x
                 </button>
             )}
         </div>
     );
 }
 
-// ---------- Infinite-scroll list ----------
-
 interface OfficialListProps {
     tracks: OfficialTrack[];
     query: string;
 }
+
 function OfficialList({ tracks, query }: OfficialListProps) {
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -193,6 +188,7 @@ interface LegacyListProps {
     tracks: LegacyTrack[];
     query: string;
 }
+
 function LegacyList({ tracks, query }: LegacyListProps) {
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -296,23 +292,13 @@ function LegacyList({ tracks, query }: LegacyListProps) {
     );
 }
 
-// ---------- Download tab ----------
-
 interface DownloadTabProps {
     type: "json" | "m3u";
-    url?: string;
+    url: string;
 }
+
 function DownloadTab({ type, url }: DownloadTabProps) {
-    if (!url) {
-        return (
-            <div className={styles.empty}>
-                No {type.toUpperCase()} file available.
-            </div>
-        );
-    }
-
     const isJson = type === "json";
-
     return (
         <div className={styles.downloadPane}>
             <p className={styles.downloadDesc}>
@@ -343,8 +329,6 @@ function DownloadTab({ type, url }: DownloadTabProps) {
     );
 }
 
-// ---------- Highlight helper ----------
-
 function Highlight({ text, query }: { text: string; query: string }) {
     const q = query.trim();
     if (!q) return <>{text}</>;
@@ -361,26 +345,75 @@ function Highlight({ text, query }: { text: string; query: string }) {
     );
 }
 
-// ---------- Main tabs ----------
+function Skeleton() {
+    return (
+        <div className={styles.list}>
+            {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                    key={i}
+                    className={styles.trackRow}
+                    style={{ opacity: 0.4 }}
+                >
+                    <span className={styles.num}>{i + 1}</span>
+                    <div className={styles.coverPlaceholder} />
+                    <div className={styles.info}>
+                        <div
+                            className={styles.title}
+                            style={{
+                                background: "var(--color-border-tertiary)",
+                                borderRadius: 4,
+                                width: `${120 + (i % 3) * 40}px`,
+                                height: 14,
+                            }}
+                        />
+                        <div
+                            className={styles.artist}
+                            style={{
+                                background: "var(--color-border-tertiary)",
+                                borderRadius: 4,
+                                width: `${60 + (i % 4) * 20}px`,
+                                height: 12,
+                                marginTop: 4,
+                            }}
+                        />
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
 
-export default function FckCensorTabs({
-    official,
-    legacy,
-    jsonUrl,
-    m3uUrl,
-}: Props) {
+export default function FckCensorTabs() {
     const [tab, setTab] = useState<TabId>("official");
     const [query, setQuery] = useState("");
+    const [official, setOfficial] = useState<OfficialTrack[]>([]);
+    const [legacy, setLegacy] = useState<LegacyTrack[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Initialise from hash on mount; default to "official" (M3U) on bare /fckcensor-next/
+    useEffect(() => {
+        setLoading(true);
+        Promise.all([
+            fetch(M3U_URL)
+                .then((r) => r.text())
+                .then(parseM3U),
+            fetch(LEGACY_URL)
+                .then((r) => r.json())
+                .then(parseLegacy),
+        ])
+            .then(([off, leg]) => {
+                setOfficial(off);
+                setLegacy(leg);
+            })
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    }, []);
+
     useEffect(() => {
         const initial = getTabFromHash();
         setTab(initial);
-        // If no hash, write the canonical one so the URL stays consistent
         if (!window.location.hash) {
             history.replaceState(null, "", TAB_HASHES[initial]);
         }
-
         const onHashChange = () => {
             setTab(getTabFromHash());
             setQuery("");
@@ -398,43 +431,43 @@ export default function FckCensorTabs({
     return (
         <div>
             <div className={styles.tabBar}>
-                {/* Official → M3U playlist */}
                 <button
                     className={`${styles.tab} ${tab === "official" ? styles.active : ""}`}
                     onClick={() => handleTabChange("official")}
                 >
                     M3U
-                    <span className={styles.count}>{official.length}</span>
+                    <span className={styles.count}>
+                        {loading ? "..." : official.length}
+                    </span>
                 </button>
-                {/* Legacy → JSON download */}
                 <button
                     className={`${styles.tab} ${tab === "legacy" ? styles.active : ""}`}
                     onClick={() => handleTabChange("legacy")}
                 >
                     JSON
-                    <span className={styles.count}>{legacy.length}</span>
+                    <span className={styles.count}>
+                        {loading ? "..." : legacy.length}
+                    </span>
                 </button>
             </div>
 
             {tab === "official" && (
                 <>
                     <SearchBar value={query} onChange={setQuery} />
-                    <OfficialList tracks={official} query={query} />
-                    {m3uUrl && (
-                        <div className={styles.downloadFooter}>
-                            <DownloadTab type="m3u" url={m3uUrl} />
-                        </div>
+                    {loading ? (
+                        <Skeleton />
+                    ) : (
+                        <OfficialList tracks={official} query={query} />
                     )}
                 </>
             )}
             {tab === "legacy" && (
                 <>
                     <SearchBar value={query} onChange={setQuery} />
-                    <LegacyList tracks={legacy} query={query} />
-                    {jsonUrl && (
-                        <div className={styles.downloadFooter}>
-                            <DownloadTab type="json" url={jsonUrl} />
-                        </div>
+                    {loading ? (
+                        <Skeleton />
+                    ) : (
+                        <LegacyList tracks={legacy} query={query} />
                     )}
                 </>
             )}
