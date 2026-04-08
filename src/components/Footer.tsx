@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const links = {
     product: [
-        { label: "Download", href: "#download", external: false },
+        { label: "Download", href: "/#download", external: false },
         {
             label: "Changelog",
             href: "https://github.com/Web-Next-Music/Next-Music-Client/releases/latest",
