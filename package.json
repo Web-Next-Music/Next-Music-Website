@@ -5,7 +5,8 @@
         "dev": "next dev",
         "build": "next build",
         "start": "npx serve@latest out",
-        "export": "next build"
+        "fetch-meta": "npx tsx scripts/fetch-track-meta.ts",
+        "prebuild": "npm run fetch-meta"
     },
     "dependencies": {
         "next": "^15.0.0",

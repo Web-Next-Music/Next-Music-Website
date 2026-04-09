@@ -1,3 +1,5 @@
+import rawMeta from "@/data/track-meta.json";
+
 export const M3U_URL =
     "https://gist.githubusercontent.com/Diramix/5db074aec38196af20d7dc19be4cdd50/raw/list.m3u";
 export const LEGACY_URL =
@@ -15,6 +17,21 @@ export interface LegacyTrack {
     url: string;
     yandexUrl: string;
 }
+
+export interface TrackMeta {
+    title: string;
+    artist: string;
+    cover?: string;
+}
+
+/**
+ * Статический словарь метаданных, сгенерированный скриптом
+ * scripts/fetch-track-meta.ts и встроенный в бандл при билде.
+ *
+ * Значение null означает что трек был запрошен, но API ничего не вернул
+ * (удалён или недоступен). В компоненте это обрабатывается как "нет данных".
+ */
+export const TRACK_META = rawMeta as Record<string, TrackMeta | null>;
 
 export function parseM3U(text: string): OfficialTrack[] {
     const lines = text

@@ -4,10 +4,12 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import {
     M3U_URL,
     LEGACY_URL,
+    TRACK_META,
     parseM3U,
     parseLegacy,
     type OfficialTrack,
     type LegacyTrack,
+    type TrackMeta,
 } from "@/lib/fckcensor";
 import styles from "./FckCensorTabs.module.css";
 
@@ -75,7 +77,7 @@ function SearchBar({ value, onChange }: SearchBarProps) {
                     onClick={() => onChange("")}
                     aria-label="Clear"
                 >
-                    x
+                    ×
                 </button>
             )}
         </div>
@@ -190,11 +192,26 @@ interface LegacyListProps {
 }
 
 function LegacyList({ tracks, query }: LegacyListProps) {
+    // Обогащаем треки статическими метаданными из встроенного JSON
+    const enriched = useMemo(
+        () =>
+            tracks.map((t) => ({
+                ...t,
+                meta: (TRACK_META[t.id] ?? null) as TrackMeta | null,
+            })),
+        [tracks],
+    );
+
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
-        if (!q) return tracks;
-        return tracks.filter((t) => String(t.id).includes(q));
-    }, [tracks, query]);
+        if (!q) return enriched;
+        return enriched.filter(
+            (t) =>
+                t.id.includes(q) ||
+                t.meta?.title?.toLowerCase().includes(q) ||
+                t.meta?.artist?.toLowerCase().includes(q),
+        );
+    }, [enriched, query]);
 
     const [visible, setVisible] = useState(PAGE_SIZE);
     const sentinelRef = useRef<HTMLDivElement>(null);
@@ -228,57 +245,81 @@ function LegacyList({ tracks, query }: LegacyListProps) {
                         : "Failed to load track list."}
                 </div>
             )}
-            {slice.map((track, i) => (
-                <a
-                    key={track.id}
-                    href={`https://music.yandex.ru/track/${track.id}`}
-                    className={styles.trackRow}
-                >
-                    <span className={styles.num}>{i + 1}</span>
-                    <div className={styles.legacyIcon}>
-                        <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                        >
-                            <path
-                                d="M9 18V5l12-2v13"
-                                stroke="var(--muted)"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
+            {slice.map((track, i) => {
+                const meta = track.meta;
+                return (
+                    <a
+                        key={track.id}
+                        href={track.yandexUrl}
+                        className={styles.trackRow}
+                    >
+                        <span className={styles.num}>{i + 1}</span>
+
+                        {meta?.cover ? (
+                            <img
+                                src={meta.cover}
+                                alt=""
+                                width={40}
+                                height={40}
+                                className={styles.cover}
+                                loading="lazy"
                             />
-                            <circle
-                                cx="6"
-                                cy="18"
-                                r="3"
-                                stroke="var(--muted)"
-                                strokeWidth="1.5"
-                            />
-                            <circle
-                                cx="18"
-                                cy="16"
-                                r="3"
-                                stroke="var(--muted)"
-                                strokeWidth="1.5"
-                            />
-                        </svg>
-                    </div>
-                    <div className={styles.info}>
-                        <div className={styles.title}>
-                            <Highlight
-                                text={`Track #${track.id}`}
-                                query={query}
-                            />
+                        ) : (
+                            <div className={styles.legacyIcon}>
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M9 18V5l12-2v13"
+                                        stroke="var(--muted)"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
+                                    <circle
+                                        cx="6"
+                                        cy="18"
+                                        r="3"
+                                        stroke="var(--muted)"
+                                        strokeWidth="1.5"
+                                    />
+                                    <circle
+                                        cx="18"
+                                        cy="16"
+                                        r="3"
+                                        stroke="var(--muted)"
+                                        strokeWidth="1.5"
+                                    />
+                                </svg>
+                            </div>
+                        )}
+
+                        <div className={styles.info}>
+                            <div className={styles.title}>
+                                <Highlight
+                                    text={meta?.title ?? `Track #${track.id}`}
+                                    query={query}
+                                />
+                            </div>
+                            <div className={styles.artist}>
+                                {meta?.artist ? (
+                                    <Highlight
+                                        text={meta.artist}
+                                        query={query}
+                                    />
+                                ) : (
+                                    <span style={{ opacity: 0.45 }}>
+                                        ID: {track.id}
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                        <div className={styles.artist}>
-                            ID:{" "}
-                            <Highlight text={String(track.id)} query={query} />
-                        </div>
-                    </div>
-                </a>
-            ))}
+                    </a>
+                );
+            })}
             {visible < filtered.length && (
                 <div ref={sentinelRef} className={styles.sentinel}>
                     <span className={styles.loadingDots}>
