@@ -1,5 +1,5 @@
 .main {
-    min-height: calc(100vh - 65px);
+    min-height: 63dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
