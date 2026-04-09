@@ -6,7 +6,7 @@ import styles from "./page.module.css";
 
 export const metadata = {
     title: "FckCensor Next — Track List",
-    description: "Список треков с обходом цензуры Яндекс Музыки",
+    description: "List of tracks bypassing Yandex Music censorship",
 };
 
 const GitHubIcon = () => (
@@ -35,7 +35,7 @@ export default function FckCensorPage() {
                         <h1 className={styles.addonTitle}>FckCensor Next</h1>
                         <p className={styles.addonDesc}>
                             This add-on allows bypassing censorship by replacing
-                            the MP3 file of the currently playing track.
+                            the MP3 file of the currently playing track
                         </p>
                     </div>
                     <a

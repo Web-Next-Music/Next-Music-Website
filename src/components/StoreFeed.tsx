@@ -1608,7 +1608,7 @@ export default function NextMusicStore() {
         try {
             setExtensions(await loadExtensions(setLoadingMsg));
         } catch (e: any) {
-            setError(e.message ?? "Failed to load extensions.");
+            setError(e.message ?? "Failed to load extensions");
         } finally {
             setLoading(false);
         }
@@ -1879,7 +1879,7 @@ export default function NextMusicStore() {
                             <div className={styles.grid}>
                                 {shownItems.length === 0 ? (
                                     <div className={styles.empty}>
-                                        No extensions found.
+                                        No extensions found
                                     </div>
                                 ) : (
                                     shownItems.map((ext, idx) => (
