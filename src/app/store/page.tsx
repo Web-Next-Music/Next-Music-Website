@@ -1,5 +1,5 @@
 import Header from "@/components/Header";
-import StoreFeed from "@/components/StoreFeed.tsx";
+import StoreFeed from "@/components/StoreFeed";
 import Footer from "@/components/Footer";
 
 export default function Home() {
