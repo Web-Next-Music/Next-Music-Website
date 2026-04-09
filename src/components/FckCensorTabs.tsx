@@ -1,6 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import {
+    useState,
+    useEffect,
+    useRef,
+    useMemo,
+    createContext,
+    useContext,
+    useCallback,
+} from "react";
 import {
     M3U_URL,
     LEGACY_URL,
@@ -12,6 +20,7 @@ import {
     type TrackMeta,
 } from "@/lib/fckcensor";
 import styles from "./FckCensorTabs.module.css";
+import playerStyles from "./MiniPlayer.module.css";
 
 const PAGE_SIZE = 20;
 
@@ -33,6 +42,412 @@ function getTabFromHash(): TabId {
     if (!hash) return "official";
     return HASH_TO_TAB[hash] ?? "official";
 }
+
+// ─── Player context ───────────────────────────────────────────────────────────
+
+export interface NowPlaying {
+    url: string;
+    title: string;
+    artist: string;
+    cover?: string;
+}
+
+interface PlayerContextValue {
+    nowPlaying: NowPlaying | null;
+    isPlaying: boolean;
+    play: (track: NowPlaying) => void;
+    pause: () => void;
+    resume: () => void;
+    close: () => void;
+    audioRef: React.RefObject<HTMLAudioElement | null>;
+}
+
+export const PlayerContext = createContext<PlayerContextValue | null>(null);
+
+export function PlayerProvider({ children }: { children: React.ReactNode }) {
+    const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
+
+    const play = useCallback((track: NowPlaying) => {
+        setNowPlaying(track);
+        setIsPlaying(true);
+    }, []);
+
+    const pause = useCallback(() => {
+        audioRef.current?.pause();
+        setIsPlaying(false);
+    }, []);
+
+    const resume = useCallback(() => {
+        audioRef.current?.play();
+        setIsPlaying(true);
+    }, []);
+
+    const close = useCallback(() => {
+        audioRef.current?.pause();
+        setNowPlaying(null);
+        setIsPlaying(false);
+    }, []);
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio || !nowPlaying) return;
+        audio.src = nowPlaying.url;
+        audio.play().catch(console.error);
+    }, [nowPlaying]);
+
+    return (
+        <PlayerContext.Provider
+            value={{
+                nowPlaying,
+                isPlaying,
+                play,
+                pause,
+                resume,
+                close,
+                audioRef,
+            }}
+        >
+            <audio ref={audioRef} onEnded={() => setIsPlaying(false)} />
+            {children}
+            <MiniPlayerSlot />
+        </PlayerContext.Provider>
+    );
+}
+
+export function usePlayer() {
+    return useContext(PlayerContext);
+}
+
+// Renders MiniPlayer into #mini-player-slot div placed right after <header>
+function MiniPlayerSlot() {
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
+    if (!mounted) return null;
+    const target = document.getElementById("mini-player-slot");
+    if (!target) return null;
+    // Dynamic import to keep createPortal client-only
+    const { createPortal } = require("react-dom");
+    return createPortal(<MiniPlayerInner />, target);
+}
+
+// ─── Mini player bar ──────────────────────────────────────────────────────────
+
+export function MiniPlayerInner() {
+    const player = usePlayer();
+    if (!player) return null;
+    const { nowPlaying, isPlaying, pause, resume, close, audioRef } = player;
+    const [progress, setProgress] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [volume, setVolume] = useState(1);
+    const [muted, setMuted] = useState(false);
+    const progressRef = useRef<HTMLDivElement>(null);
+
+    const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = parseFloat(e.target.value);
+        setVolume(val);
+        if (audioRef.current) {
+            audioRef.current.volume = val;
+            audioRef.current.muted = val === 0;
+        }
+        setMuted(val === 0);
+    };
+
+    const toggleMute = () => {
+        const audio = audioRef.current;
+        if (!audio) return;
+        const next = !muted;
+        setMuted(next);
+        audio.muted = next;
+    };
+
+    const effectiveVolume = muted ? 0 : volume;
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+        const onTime = () => setProgress(audio.currentTime);
+        const onDur = () => setDuration(audio.duration);
+        audio.addEventListener("timeupdate", onTime);
+        audio.addEventListener("durationchange", onDur);
+        return () => {
+            audio.removeEventListener("timeupdate", onTime);
+            audio.removeEventListener("durationchange", onDur);
+        };
+    }, [audioRef]);
+
+    const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const ratio = (e.clientX - rect.left) / rect.width;
+        const audio = audioRef.current;
+        if (audio && duration) {
+            audio.currentTime = ratio * duration;
+        }
+    };
+
+    const fmt = (s: number) => {
+        if (!isFinite(s)) return "0:00";
+        const m = Math.floor(s / 60);
+        const sec = Math.floor(s % 60);
+        return `${m}:${sec.toString().padStart(2, "0")}`;
+    };
+
+    // Push page content down when player is visible
+    useEffect(() => {
+        document.body.classList.toggle("has-mini-player", !!nowPlaying);
+        return () => document.body.classList.remove("has-mini-player");
+    }, [!!nowPlaying]);
+
+    if (!nowPlaying) return null;
+
+    const pct = duration ? (progress / duration) * 100 : 0;
+
+    return (
+        <div className={playerStyles.bar}>
+            <div className={playerStyles.inner}>
+                {/* LEFT: cover + info */}
+                <div className={playerStyles.left}>
+                    {nowPlaying.cover ? (
+                        <img
+                            src={nowPlaying.cover}
+                            alt=""
+                            className={playerStyles.cover}
+                        />
+                    ) : (
+                        <div className={playerStyles.coverPlaceholder} />
+                    )}
+                    <div className={playerStyles.info}>
+                        <span className={playerStyles.title}>
+                            {nowPlaying.title}
+                        </span>
+                        <span className={playerStyles.artist}>
+                            {nowPlaying.artist}
+                        </span>
+                    </div>
+                </div>
+
+                {/* MIDDLE: time + progress + time — grows to fill space */}
+                <span className={playerStyles.timeSingle}>{fmt(progress)}</span>
+                <div
+                    className={playerStyles.progressWrap}
+                    onClick={handleSeek}
+                    ref={progressRef}
+                >
+                    <div
+                        className={playerStyles.progressFill}
+                        style={{ width: `${pct}%` }}
+                    />
+                </div>
+                <span className={playerStyles.timeSingle}>{fmt(duration)}</span>
+
+                {/* Play / Pause */}
+                <button
+                    className={playerStyles.btn}
+                    onClick={isPlaying ? pause : resume}
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                >
+                    {isPlaying ? (
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                        >
+                            <rect x="6" y="4" width="4" height="16" rx="1" />
+                            <rect x="14" y="4" width="4" height="16" rx="1" />
+                        </svg>
+                    ) : (
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                        >
+                            <path d="M5 3l14 9-14 9V3z" />
+                        </svg>
+                    )}
+                </button>
+
+                {/* Volume */}
+                <div className={playerStyles.volumeWrap}>
+                    <button
+                        className={playerStyles.btn}
+                        onClick={toggleMute}
+                        aria-label={muted ? "Unmute" : "Mute"}
+                    >
+                        {effectiveVolume === 0 ? (
+                            <svg
+                                width="15"
+                                height="15"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                            >
+                                <path
+                                    d="M11 5L6 9H3v6h3l5 4V5z"
+                                    fill="currentColor"
+                                />
+                                <line
+                                    x1="22"
+                                    y1="9"
+                                    x2="16"
+                                    y2="15"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                />
+                                <line
+                                    x1="16"
+                                    y1="9"
+                                    x2="22"
+                                    y2="15"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                        ) : effectiveVolume < 0.5 ? (
+                            <svg
+                                width="15"
+                                height="15"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                            >
+                                <path
+                                    d="M11 5L6 9H3v6h3l5 4V5z"
+                                    fill="currentColor"
+                                />
+                                <path
+                                    d="M15.5 8.5a5 5 0 0 1 0 7"
+                                    stroke="currentColor"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                    fill="none"
+                                />
+                            </svg>
+                        ) : (
+                            <svg
+                                width="15"
+                                height="15"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                            >
+                                <path
+                                    d="M11 5L6 9H3v6h3l5 4V5z"
+                                    fill="currentColor"
+                                />
+                                <path
+                                    d="M15.5 8.5a5 5 0 0 1 0 7"
+                                    stroke="currentColor"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                    fill="none"
+                                />
+                                <path
+                                    d="M18.5 5.5a9 9 0 0 1 0 13"
+                                    stroke="currentColor"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                    fill="none"
+                                />
+                            </svg>
+                        )}
+                    </button>
+                    <div className={playerStyles.volumeSliderWrap}>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.02"
+                            value={muted ? 0 : volume}
+                            onChange={handleVolumeChange}
+                            className={playerStyles.volumeSlider}
+                            aria-label="Volume"
+                            style={
+                                {
+                                    "--vol": `${effectiveVolume * 100}%`,
+                                } as React.CSSProperties
+                            }
+                        />
+                    </div>
+                </div>
+
+                {/* Close */}
+                <button
+                    className={playerStyles.btn}
+                    onClick={close}
+                    aria-label="Close player"
+                >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M18 6L6 18M6 6l12 12"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                        />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    );
+}
+
+// ─── Play button ──────────────────────────────────────────────────────────────
+
+interface PlayBtnProps {
+    track: NowPlaying;
+}
+
+function PlayBtn({ track }: PlayBtnProps) {
+    const player = usePlayer();
+    if (!player) return null;
+    const { nowPlaying, isPlaying, play, pause, resume } = player;
+    const isThis = nowPlaying?.url === track.url;
+    const active = isThis && isPlaying;
+
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isThis) {
+            play(track);
+        } else if (isPlaying) {
+            pause();
+        } else {
+            resume();
+        }
+    };
+
+    return (
+        <button
+            className={`${styles.playBtn} ${isThis ? styles.playBtnActive : ""}`}
+            onClick={handleClick}
+            aria-label={active ? "Pause" : "Play"}
+        >
+            {active ? (
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                >
+                    <rect x="6" y="4" width="4" height="16" rx="1" />
+                    <rect x="14" y="4" width="4" height="16" rx="1" />
+                </svg>
+            ) : (
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                >
+                    <path d="M5 3l14 9-14 9V3z" />
+                </svg>
+            )}
+        </button>
+    );
+}
+
+// ─── Search bar ───────────────────────────────────────────────────────────────
 
 interface SearchBarProps {
     value: string;
@@ -83,6 +498,8 @@ function SearchBar({ value, onChange }: SearchBarProps) {
         </div>
     );
 }
+
+// ─── Official list ────────────────────────────────────────────────────────────
 
 interface OfficialListProps {
     tracks: OfficialTrack[];
@@ -136,14 +553,16 @@ function OfficialList({ tracks, query }: OfficialListProps) {
             {slice.map((track, i) => {
                 const match = track.url.match(/\/(\d+)\.mp3$/);
                 const trackId = match?.[1];
+                const yandexHref = trackId
+                    ? `https://music.yandex.ru/track/${trackId}`
+                    : track.url;
+
                 return (
                     <a
                         key={i}
-                        href={
-                            trackId
-                                ? `https://music.yandex.ru/track/${trackId}`
-                                : track.url
-                        }
+                        href={yandexHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className={styles.trackRow}
                     >
                         <span className={styles.num}>{i + 1}</span>
@@ -170,6 +589,14 @@ function OfficialList({ tracks, query }: OfficialListProps) {
                                 <Highlight text={track.artist} query={query} />
                             </div>
                         </div>
+                        <PlayBtn
+                            track={{
+                                url: track.url,
+                                title: track.title || "—",
+                                artist: track.artist || "",
+                                cover: track.cover,
+                            }}
+                        />
                     </a>
                 );
             })}
@@ -186,13 +613,14 @@ function OfficialList({ tracks, query }: OfficialListProps) {
     );
 }
 
+// ─── Legacy list ──────────────────────────────────────────────────────────────
+
 interface LegacyListProps {
     tracks: LegacyTrack[];
     query: string;
 }
 
 function LegacyList({ tracks, query }: LegacyListProps) {
-    // Обогащаем треки статическими метаданными из встроенного JSON
     const enriched = useMemo(
         () =>
             tracks.map((t) => ({
@@ -251,6 +679,8 @@ function LegacyList({ tracks, query }: LegacyListProps) {
                     <a
                         key={track.id}
                         href={track.yandexUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className={styles.trackRow}
                     >
                         <span className={styles.num}>{i + 1}</span>
@@ -317,6 +747,14 @@ function LegacyList({ tracks, query }: LegacyListProps) {
                                 )}
                             </div>
                         </div>
+                        <PlayBtn
+                            track={{
+                                url: track.url,
+                                title: meta?.title ?? `Track #${track.id}`,
+                                artist: meta?.artist ?? "",
+                                cover: meta?.cover,
+                            }}
+                        />
                     </a>
                 );
             })}
@@ -332,6 +770,8 @@ function LegacyList({ tracks, query }: LegacyListProps) {
         </div>
     );
 }
+
+// ─── Download tab ─────────────────────────────────────────────────────────────
 
 interface DownloadTabProps {
     type: "json" | "m3u";
@@ -370,6 +810,8 @@ function DownloadTab({ type, url }: DownloadTabProps) {
     );
 }
 
+// ─── Highlight ────────────────────────────────────────────────────────────────
+
 function Highlight({ text, query }: { text: string; query: string }) {
     const q = query.trim();
     if (!q) return <>{text}</>;
@@ -385,6 +827,8 @@ function Highlight({ text, query }: { text: string; query: string }) {
         </>
     );
 }
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function Skeleton() {
     return (
@@ -423,6 +867,8 @@ function Skeleton() {
         </div>
     );
 }
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function FckCensorTabs() {
     const [tab, setTab] = useState<TabId>("official");

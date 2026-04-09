@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FckCensorTabs from "@/components/FckCensorTabs";
+import FckCensorTabs, { PlayerProvider } from "@/components/FckCensorTabs";
 import Image from "next/image";
 import styles from "./page.module.css";
 
@@ -20,7 +20,9 @@ const GitHubIcon = () => (
 
 export default function FckCensorPage() {
     return (
-        <>
+        <PlayerProvider>
+            {" "}
+            {/* ← добавить */}
             <Header />
             <main className={styles.main}>
                 <div className={styles.addonHero}>
@@ -75,6 +77,6 @@ export default function FckCensorPage() {
                 <FckCensorTabs />
             </main>
             <Footer />
-        </>
+        </PlayerProvider>
     );
 }

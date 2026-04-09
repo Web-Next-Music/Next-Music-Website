@@ -141,6 +141,10 @@
     border-color: var(--border);
 }
 
+.trackRow:hover .playBtn {
+    opacity: 1;
+}
+
 .trackRow:active {
     transform: scale(0.995);
 }
@@ -206,6 +210,40 @@
     text-overflow: ellipsis;
 }
 
+/* ---- Play button ---- */
+.playBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    opacity: 0;
+    transition:
+        opacity 0.15s,
+        background 0.15s,
+        color 0.15s,
+        border-color 0.15s;
+}
+
+.playBtn:hover {
+    background: var(--surface2);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.playBtnActive {
+    opacity: 1 !important;
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(43, 254, 245, 0.08);
+}
+
 /* ---- Infinite scroll sentinel ---- */
 .sentinel {
     display: flex;
@@ -267,5 +305,8 @@
     }
     .num {
         display: none;
+    }
+    .playBtn {
+        opacity: 1;
     }
 }
