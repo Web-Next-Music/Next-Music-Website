@@ -8,7 +8,7 @@
     border-bottom: 1px solid var(--border);
     backdrop-filter: blur(12px);
     position: fixed;
-    top: 61px;
+    top: 60px;
     left: 0;
     right: 0;
     z-index: 9;
