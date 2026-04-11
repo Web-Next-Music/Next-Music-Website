@@ -9,13 +9,13 @@
         "prebuild": "npm run fetch-meta"
     },
     "dependencies": {
-        "next": "^15.0.0",
-        "react": "^19.0.0",
-        "react-dom": "^19.0.0"
+        "next": "^16.2.3",
+        "react": "^19.2.5",
+        "react-dom": "^19.2.5"
     },
     "devDependencies": {
         "@tailwindcss/postcss": "^4.2.2",
-        "@types/node": "^22",
+        "@types/node": "^25",
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "autoprefixer": "^10.4.27",
@@ -23,6 +23,6 @@
         "eslint-config-next": "^16.2.3",
         "postcss": "^8.5.9",
         "tailwindcss": "^4.2.2",
-        "typescript": "^5"
+        "typescript": "^6"
     }
 }
