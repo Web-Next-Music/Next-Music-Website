@@ -715,8 +715,8 @@ function OfficialList({ tracks, query }: OfficialListProps) {
             {filtered.length === 0 && (
                 <div className={styles.empty}>
                     {query.trim()
-                        ? "No results found."
-                        : "Failed to load track list."}
+                        ? "No results found"
+                        : "Failed to load track list"}
                 </div>
             )}
             {slice.map((track, i) => {
@@ -842,8 +842,8 @@ function LegacyList({ tracks, query }: LegacyListProps) {
             {filtered.length === 0 && (
                 <div className={styles.empty}>
                     {query.trim()
-                        ? "No results found."
-                        : "Failed to load track list."}
+                        ? "No results found"
+                        : "Failed to load track list"}
                 </div>
             )}
             {slice.map((track, i) => {
@@ -957,9 +957,7 @@ function DownloadTab({ type, url }: DownloadTabProps) {
     return (
         <div className={styles.downloadPane}>
             <p className={styles.downloadDesc}>
-                {isJson
-                    ? "Full track list as a JSON file — useful for scripts, bots, or your own tools."
-                    : "M3U playlist — open directly in VLC, foobar2000, or any compatible player."}
+                {isJson ? "Track list as a JSON file." : "M3U playlist."}
             </p>
             <a href={url} download className={styles.downloadBtn}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">

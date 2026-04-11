@@ -44,7 +44,7 @@ export function parseM3U(text: string): OfficialTrack[] {
         if (!line.startsWith("#EXTINF")) continue;
         const logoMatch = line.match(/tvg-logo="([^"]+)"/);
         const cover = logoMatch?.[1] ?? "";
-        const commaIdx = line.lastIndexOf(",");
+        const commaIdx = line.indexOf(",", line.lastIndexOf('"'));
         const fullTitle = commaIdx >= 0 ? line.slice(commaIdx + 1).trim() : "";
         const dashIdx = fullTitle.indexOf(" - ");
         const artist =
