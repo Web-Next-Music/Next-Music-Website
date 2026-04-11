@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/lib/theme";
+import { PlayerProvider } from "@/components/FckCensorTabs";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -41,7 +42,9 @@ export default function RootLayout({
                 />
             </head>
             <body suppressHydrationWarning>
-                <ThemeProvider>{children}</ThemeProvider>
+                <ThemeProvider>
+                    <PlayerProvider>{children}</PlayerProvider>
+                </ThemeProvider>
             </body>
         </html>
     );

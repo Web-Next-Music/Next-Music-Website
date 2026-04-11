@@ -1,10 +1,11 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FckCensorTabs, { PlayerProvider } from "@/components/FckCensorTabs";
+import FckCensorTabs from "@/components/FckCensorTabs";
 import Image from "next/image";
 import styles from "./page.module.css";
+import { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
     title: "FckCensor Next — Track List",
     description: "List of tracks bypassing Yandex Music censorship",
 };
@@ -18,11 +19,11 @@ const GitHubIcon = () => (
     </svg>
 );
 
+// PlayerProvider убран — он теперь в app/layout.tsx и живёт на уровне всего приложения.
+// Это позволяет музыке продолжать играть при переходе на /track и обратно.
 export default function FckCensorPage() {
     return (
-        <PlayerProvider>
-            {" "}
-            {/* ← добавить */}
+        <>
             <Header />
             <main className={styles.main}>
                 <div className={styles.addonHero}>
@@ -77,6 +78,6 @@ export default function FckCensorPage() {
                 <FckCensorTabs />
             </main>
             <Footer />
-        </PlayerProvider>
+        </>
     );
 }

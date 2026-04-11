@@ -8,7 +8,9 @@ import {
     createContext,
     useContext,
     useCallback,
+    useSyncExternalStore,
 } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
     M3U_URL,
     LEGACY_URL,
@@ -19,8 +21,16 @@ import {
     type LegacyTrack,
     type TrackMeta,
 } from "@/lib/fckcensor";
+import {
+    ensureTracksLoaded,
+    subscribeStore,
+    getStoreSnapshot,
+    getServerSnapshot,
+    findTrackById,
+} from "@/lib/trackStore";
 import styles from "./FckCensorTabs.module.css";
 import playerStyles from "./MiniPlayer.module.css";
+import Link from "next/link";
 
 const PAGE_SIZE = 20;
 
@@ -46,6 +56,7 @@ function getTabFromHash(): TabId {
 // ─── Player context ───────────────────────────────────────────────────────────
 
 export interface NowPlaying {
+    id?: string;
     url: string;
     title: string;
     artist: string;
@@ -79,7 +90,6 @@ function useRichPresenceWS(
     const wsRef = useRef<WebSocket | null>(null);
     const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // Refs so callbacks always see latest values without re-creating them
     const nowPlayingRef = useRef(nowPlaying);
     const isPlayingRef = useRef(isPlaying);
     useEffect(() => {
@@ -95,7 +105,6 @@ function useRichPresenceWS(
         }
     }, []);
 
-    // Reads fresh audio state at call-time — never stale
     const buildPayload = useCallback(
         (state: "playing" | "paused" | "stopped") => {
             const audio = audioRef.current;
@@ -105,7 +114,7 @@ function useRichPresenceWS(
                 audio?.duration && isFinite(audio.duration)
                     ? audio.duration
                     : 0;
-            const trackId = np?.url.match(/\/(\d+)\.mp3$/)?.[1] ?? "";
+            const trackId = np?.id ?? np?.url.match(/\/(\d+)\.mp3$/)?.[1] ?? "";
             return {
                 playerState: state,
                 title: np?.title ?? "",
@@ -136,7 +145,6 @@ function useRichPresenceWS(
         );
     }, [send, buildPayload, stopTick]);
 
-    // New track → reconnect WS, then wait for durationchange before first send
     useEffect(() => {
         const audio = audioRef.current;
         stopTick();
@@ -156,7 +164,6 @@ function useRichPresenceWS(
             return;
         }
 
-        // Reconnect
         if (wsRef.current) {
             wsRef.current.onclose = null;
             wsRef.current.close();
@@ -164,14 +171,10 @@ function useRichPresenceWS(
         }
         const ws = new WebSocket(WS_URL);
         wsRef.current = ws;
-        ws.onerror = () => {
-            /* desktop app may not be running */
-        };
+        ws.onerror = () => {};
         ws.onopen = () => console.log("[RPC-WS] Connected");
         ws.onclose = () => console.log("[RPC-WS] Disconnected");
 
-        // Send first payload only after duration is available — fixes the
-        // broken-timestamps burst that happened when audio wasn't loaded yet.
         const onReady = () => {
             const state = isPlayingRef.current ? "playing" : "paused";
             send(buildPayload(state));
@@ -180,7 +183,6 @@ function useRichPresenceWS(
 
         if (audio) {
             if (audio.duration && isFinite(audio.duration)) {
-                // Duration already known (e.g. cached resource)
                 onReady();
             } else {
                 audio.addEventListener("durationchange", onReady, {
@@ -195,7 +197,6 @@ function useRichPresenceWS(
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nowPlaying?.url]);
 
-    // Play / pause toggle — only send if duration is already known
     useEffect(() => {
         if (!nowPlaying) return;
         const audio = audioRef.current;
@@ -210,7 +211,6 @@ function useRichPresenceWS(
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isPlaying]);
 
-    // Cleanup on provider unmount
     useEffect(() => {
         return () => {
             stopTick();
@@ -239,7 +239,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     useRichPresenceWS(nowPlaying, isPlaying, audioRef);
 
     const play = useCallback((track: NowPlaying) => {
-        setNowPlaying(track);
+        // Derive id from url if not provided
+        const id =
+            track.id ?? track.url.match(/\/(\d+)\.mp3$/)?.[1] ?? undefined;
+        setNowPlaying({ ...track, id });
         setIsPlaying(true);
     }, []);
 
@@ -280,7 +283,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         >
             <audio ref={audioRef} onEnded={() => setIsPlaying(false)} />
             {children}
-            <MiniPlayerSlot />
+            <MiniPlayerInner />
         </PlayerContext.Provider>
     );
 }
@@ -289,29 +292,43 @@ export function usePlayer() {
     return useContext(PlayerContext);
 }
 
-// Renders MiniPlayer into #mini-player-slot div placed right after <header>
-function MiniPlayerSlot() {
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
-    if (!mounted) return null;
-    const target = document.getElementById("mini-player-slot");
-    if (!target) return null;
-    // Dynamic import to keep createPortal client-only
-    const { createPortal } = require("react-dom");
-    return createPortal(<MiniPlayerInner />, target);
-}
-
 // ─── Mini player bar ──────────────────────────────────────────────────────────
 
 export function MiniPlayerInner() {
     const player = usePlayer();
+    const router = useRouter();
+    const pathname = usePathname();
     if (!player) return null;
     const { nowPlaying, isPlaying, pause, resume, close, audioRef } = player;
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(1);
     const [muted, setMuted] = useState(false);
+    const [lyricsOpen, setLyricsOpen] = useState(true);
     const progressRef = useRef<HTMLDivElement>(null);
+
+    const isOnTrackPage = pathname === "/track";
+
+    useEffect(() => {
+        const handler = (e: Event) => {
+            setLyricsOpen((e as CustomEvent<{ open: boolean }>).detail.open);
+        };
+        window.addEventListener("lyricsState", handler);
+        return () => window.removeEventListener("lyricsState", handler);
+    }, []);
+
+    useEffect(() => {
+        if (!isOnTrackPage) setLyricsOpen(true);
+    }, [isOnTrackPage]);
+
+    const handleLyricsClick = () => {
+        if (!nowPlaying?.id) return;
+        if (isOnTrackPage) {
+            window.dispatchEvent(new CustomEvent("toggleLyrics"));
+        } else {
+            router.push(`/track?id=${nowPlaying.id}`);
+        }
+    };
 
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = parseFloat(e.target.value);
@@ -362,15 +379,25 @@ export function MiniPlayerInner() {
         return `${m}:${sec.toString().padStart(2, "0")}`;
     };
 
-    // Push page content down when player is visible
     useEffect(() => {
-        document.body.classList.toggle("has-mini-player", !!nowPlaying);
-        return () => document.body.classList.remove("has-mini-player");
+        const root = document.documentElement;
+        if (nowPlaying) {
+            document.body.classList.add("has-mini-player");
+            root.style.setProperty("--mini-player-h", "48px");
+        } else {
+            document.body.classList.remove("has-mini-player");
+            root.style.setProperty("--mini-player-h", "0px");
+        }
+        return () => {
+            document.body.classList.remove("has-mini-player");
+            root.style.setProperty("--mini-player-h", "0px");
+        };
     }, [!!nowPlaying]);
 
     if (!nowPlaying) return null;
 
     const pct = duration ? (progress / duration) * 100 : 0;
+    const trackId = nowPlaying.id;
 
     return (
         <div className={playerStyles.bar}>
@@ -396,7 +423,7 @@ export function MiniPlayerInner() {
                     </div>
                 </div>
 
-                {/* MIDDLE: time + progress + time — grows to fill space */}
+                {/* MIDDLE: time + progress + time */}
                 <span className={playerStyles.timeSingle}>{fmt(progress)}</span>
                 <div
                     className={playerStyles.progressWrap}
@@ -409,6 +436,36 @@ export function MiniPlayerInner() {
                     />
                 </div>
                 <span className={playerStyles.timeSingle}>{fmt(duration)}</span>
+
+                {/* Lyrics button */}
+                {trackId && (
+                    <button
+                        className={`${playerStyles.btn} ${isOnTrackPage && lyricsOpen ? playerStyles.btnActive : ""}`}
+                        onClick={handleLyricsClick}
+                        aria-label={
+                            isOnTrackPage ? "Toggle lyrics" : "View lyrics"
+                        }
+                        title={
+                            isOnTrackPage
+                                ? "Toggle lyrics"
+                                : "Lyrics / Track page"
+                        }
+                    >
+                        <svg
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M4 6h16M4 10h10M4 14h12M4 18h8"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                            />
+                        </svg>
+                    </button>
+                )}
 
                 {/* Play / Pause */}
                 <button
@@ -722,18 +779,10 @@ function OfficialList({ tracks, query }: OfficialListProps) {
             {slice.map((track, i) => {
                 const match = track.url.match(/\/(\d+)\.mp3$/);
                 const trackId = match?.[1];
-                const yandexHref = trackId
-                    ? `https://music.yandex.ru/track/${trackId}`
-                    : track.url;
+                const yandexHref = trackId ? `track?id=${trackId}` : track.url;
 
                 return (
-                    <a
-                        key={i}
-                        href={yandexHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.trackRow}
-                    >
+                    <Link href={yandexHref} className={styles.trackRow}>
                         <span className={styles.num}>{i + 1}</span>
                         {track.cover ? (
                             <img
@@ -760,6 +809,7 @@ function OfficialList({ tracks, query }: OfficialListProps) {
                         </div>
                         <PlayBtn
                             track={{
+                                id: trackId,
                                 url: track.url,
                                 title: track.title || "—",
                                 artist: track.artist || "",
@@ -770,7 +820,7 @@ function OfficialList({ tracks, query }: OfficialListProps) {
                                         : undefined,
                             }}
                         />
-                    </a>
+                    </Link>
                 );
             })}
             {visible < filtered.length && (
@@ -848,14 +898,8 @@ function LegacyList({ tracks, query }: LegacyListProps) {
             )}
             {slice.map((track, i) => {
                 const meta = track.meta;
-                return (
-                    <a
-                        key={track.id}
-                        href={track.yandexUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.trackRow}
-                    >
+                const inner = (
+                    <>
                         <span className={styles.num}>{i + 1}</span>
 
                         {meta?.cover ? (
@@ -922,6 +966,7 @@ function LegacyList({ tracks, query }: LegacyListProps) {
                         </div>
                         <PlayBtn
                             track={{
+                                id: track.id,
                                 url: track.url,
                                 title: meta?.title ?? `Track #${track.id}`,
                                 artist: meta?.artist ?? "",
@@ -929,6 +974,26 @@ function LegacyList({ tracks, query }: LegacyListProps) {
                                 yandexUrl: track.yandexUrl,
                             }}
                         />
+                    </>
+                );
+
+                return meta ? (
+                    <Link
+                        key={track.id}
+                        href={`/track?id=${track.id}`}
+                        className={styles.trackRow}
+                    >
+                        {inner}
+                    </Link>
+                ) : (
+                    <a
+                        key={track.id}
+                        href={track.yandexUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.trackRow}
+                    >
+                        {inner}
                     </a>
                 );
             })}
@@ -1045,26 +1110,16 @@ function Skeleton() {
 export default function FckCensorTabs() {
     const [tab, setTab] = useState<TabId>("official");
     const [query, setQuery] = useState("");
-    const [official, setOfficial] = useState<OfficialTrack[]>([]);
-    const [legacy, setLegacy] = useState<LegacyTrack[]>([]);
-    const [loading, setLoading] = useState(true);
+
+    const { official, legacy, loaded } = useSyncExternalStore(
+        subscribeStore,
+        getStoreSnapshot,
+        getServerSnapshot,
+    );
+    const loading = !loaded;
 
     useEffect(() => {
-        setLoading(true);
-        Promise.all([
-            fetch(M3U_URL)
-                .then((r) => r.text())
-                .then(parseM3U),
-            fetch(LEGACY_URL)
-                .then((r) => r.json())
-                .then(parseLegacy),
-        ])
-            .then(([off, leg]) => {
-                setOfficial(off);
-                setLegacy(leg);
-            })
-            .catch(console.error)
-            .finally(() => setLoading(false));
+        ensureTracksLoaded();
     }, []);
 
     useEffect(() => {

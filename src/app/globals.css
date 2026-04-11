@@ -13,6 +13,7 @@
 :root {
     --font-heading-large: "Syne", "Science Gothic", sans-serif;
     --font-base: "Space Mono", monospace;
+    --mini-player-h: 0px;
 }
 
 [data-theme="dark"] {
@@ -50,6 +51,11 @@ body {
     transition:
         background 0.25s,
         color 0.25s;
+}
+
+main {
+    padding-top: var(--mini-player-h);
+    transition: padding-top 0.2s ease;
 }
 
 a {

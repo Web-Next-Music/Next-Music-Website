@@ -173,6 +173,12 @@
     color: var(--accent);
 }
 
+.btnActive {
+    background: rgba(43, 254, 245, 0.08) !important;
+    border-color: rgba(43, 254, 245, 0.35) !important;
+    color: var(--accent) !important;
+}
+
 /* ─── Volume ─────────────────────────────────────────────────── */
 
 .volumeWrap {

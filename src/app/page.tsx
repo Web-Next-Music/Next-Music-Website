@@ -7,9 +7,11 @@ export default function Home() {
     return (
         <>
             <Header />
-            <div id="download">
-                <Hero />
-            </div>
+            <main>
+                <div id="download">
+                    <Hero />
+                </div>
+            </main>
             <StarsSection />
             <Footer />
         </>
