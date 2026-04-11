@@ -75,7 +75,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function coverUrl(raw?: string): string | undefined {
     if (!raw) return undefined;
-    return "https://" + raw.replace("%%", "200x200");
+    return "https://" + raw.replace("%%", "400x400");
 }
 
 function loadExisting(): MetaMap {
