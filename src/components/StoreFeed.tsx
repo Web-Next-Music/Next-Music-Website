@@ -86,28 +86,82 @@ async function loadGitmodules(): Promise<Record<string, string>> {
 // For regular dirs: owner=OWNER, repo=REPO, folderPath = "Addons/FolderName".
 // We always list the correct folder so icons/readme/user.js are found locally.
 
+const isImg = (n: string) => /\.(png|jpe?g|gif|webp|svg)$/i.test(n);
+
+function pickImg(list: any[]): string | null {
+    return (
+        list.find(
+            (i) =>
+                i.type === "file" &&
+                /^(image|icon|logo|preview)\./i.test(i.name) &&
+                isImg(i.name),
+        )?.download_url ||
+        list.find((i) => i.type === "file" && isImg(i.name))?.download_url ||
+        null
+    );
+}
+
+// Recursively search for images within a known directory (e.g. branding/)
+async function findLogoRecursive(
+    owner: string,
+    repo: string,
+    dirPath: string,
+    depth = 0,
+): Promise<string | null> {
+    if (depth > 5) return null;
+    try {
+        const items: any[] = await ghContents(owner, repo, dirPath);
+        const logo = pickImg(items);
+        if (logo) return logo;
+        for (const sub of items.filter((i) => i.type === "dir")) {
+            const found = await findLogoRecursive(owner, repo, sub.path, depth + 1);
+            if (found) return found;
+        }
+    } catch {
+        /* skip */
+    }
+    return null;
+}
+
+// Recursively find the path of a "branding" folder anywhere in the tree
+async function findBrandingDir(
+    owner: string,
+    repo: string,
+    items: any[],
+    depth = 0,
+): Promise<string | null> {
+    const branding = items.find(
+        (i) => i.type === "dir" && /^branding$/i.test(i.name),
+    );
+    if (branding) return branding.path;
+    if (depth >= 3) return null;
+    for (const sub of items.filter((i) => i.type === "dir")) {
+        try {
+            const subItems: any[] = await ghContents(owner, repo, sub.path);
+            const found = await findBrandingDir(owner, repo, subItems, depth + 1);
+            if (found) return found;
+        } catch {
+            /* skip */
+        }
+    }
+    return null;
+}
+
 async function getFolderMeta(owner: string, repo: string, folderPath: string) {
     try {
         const items: any[] = await ghContents(owner, repo, folderPath);
-        const isImg = (n: string) => /\.(png|jpe?g|gif|webp|svg)$/i.test(n);
 
-        function pickImg(list: any[]): string | null {
-            return (
-                list.find(
-                    (i) =>
-                        i.type === "file" &&
-                        /^(image|icon|logo|preview)\./i.test(i.name) &&
-                        isImg(i.name),
-                )?.download_url ||
-                list.find((i) => i.type === "file" && isImg(i.name))
-                    ?.download_url ||
-                null
-            );
+        // First: recursively find branding folder anywhere in the tree
+        const brandingPath = await findBrandingDir(owner, repo, items);
+        let logo: string | null = brandingPath
+            ? await findLogoRecursive(owner, repo, brandingPath)
+            : null;
+
+        // Fallback: check root-level images, then one level deep in source dirs
+        if (!logo) {
+            logo = pickImg(items);
         }
 
-        let logo = pickImg(items);
-
-        // If no image at root level, look one directory deeper (e.g. src/ or assets/)
         if (!logo) {
             for (const sub of items.filter((i) => i.type === "dir")) {
                 try {
