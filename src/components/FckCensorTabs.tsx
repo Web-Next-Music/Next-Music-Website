@@ -33,6 +33,8 @@ import playerStyles from "./MiniPlayer.module.css";
 import Link from "next/link";
 
 const PAGE_SIZE = 20;
+const TRACK_HEIGHT = 58; // Approximate height of each track row in px
+const BUFFER_SIZE = 10; // Number of extra tracks to render above/below viewport
 
 type TabId = "official" | "legacy";
 
@@ -744,31 +746,70 @@ function OfficialList({ tracks, query }: OfficialListProps) {
         );
     }, [tracks, query]);
 
-    const [visible, setVisible] = useState(PAGE_SIZE);
-    const sentinelRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<HTMLDivElement>(null);
+    const spacerRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [renderRange, setRenderRange] = useState({ start: 0, end: PAGE_SIZE + BUFFER_SIZE * 2 });
+    const [listOffset, setListOffset] = useState(0);
 
+    // Reset render range when filtered tracks change
     useEffect(() => {
-        setVisible(PAGE_SIZE);
+        setRenderRange({ start: 0, end: PAGE_SIZE + BUFFER_SIZE * 2 });
     }, [filtered]);
 
+    // Calculate offset and handle scroll
     useEffect(() => {
-        const el = sentinelRef.current;
-        if (!el) return;
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting)
-                    setVisible((v) => Math.min(v + PAGE_SIZE, filtered.length));
-            },
-            { rootMargin: "200px" },
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, [filtered.length]);
+        const updateOffset = () => {
+            if (listRef.current) {
+                const rect = listRef.current.getBoundingClientRect();
+                setListOffset(window.scrollY + rect.top);
+            }
+        };
 
-    const slice = filtered.slice(0, visible);
+        updateOffset();
+
+        const handleScroll = () => {
+            const viewportHeight = window.innerHeight;
+            const scrollTop = window.scrollY;
+            
+            // Calculate scroll position relative to the list
+            const listScrollTop = scrollTop - listOffset;
+            
+            // If list is not visible yet, don't render anything
+            if (listScrollTop + viewportHeight < 0) {
+                setRenderRange({ start: 0, end: Math.min(PAGE_SIZE, filtered.length) });
+                return;
+            }
+            
+            // If we're above the list, start from 0
+            const effectiveScrollTop = Math.max(0, listScrollTop);
+
+            const startIdx = Math.max(
+                0,
+                Math.floor(effectiveScrollTop / TRACK_HEIGHT) - BUFFER_SIZE
+            );
+            const endIdx = Math.min(
+                filtered.length,
+                Math.ceil((effectiveScrollTop + viewportHeight) / TRACK_HEIGHT) + BUFFER_SIZE
+            );
+
+            setRenderRange({ start: startIdx, end: endIdx });
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        window.addEventListener('resize', handleScroll, { passive: true });
+        handleScroll(); // Initial calculation
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', handleScroll);
+        };
+    }, [filtered.length, listOffset]);
+
+    const visibleTracks = filtered.slice(renderRange.start, renderRange.end);
 
     return (
-        <div className={styles.list}>
+        <div ref={listRef} className={styles.list}>
             {filtered.length === 0 && (
                 <div className={styles.empty}>
                     {query.trim()
@@ -776,62 +817,87 @@ function OfficialList({ tracks, query }: OfficialListProps) {
                         : "Failed to load track list"}
                 </div>
             )}
-            {slice.map((track, i) => {
-                const match = track.url.match(/\/(\d+)\.mp3$/);
-                const trackId = match?.[1];
-                const yandexHref = trackId ? `track?id=${trackId}` : track.url;
+            {/* Spacer to maintain correct scroll height */}
+            <div
+                ref={spacerRef}
+                style={{
+                    height: filtered.length * TRACK_HEIGHT,
+                    position: 'relative',
+                }}
+            >
+                {/* Content positioned absolutely within spacer */}
+                <div
+                    ref={contentRef}
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        transform: `translateY(${renderRange.start * TRACK_HEIGHT}px)`,
+                    }}
+                >
+                    {visibleTracks.map((track, i) => {
+                        const globalIndex = renderRange.start + i;
+                        const match = track.url.match(/\/(\d+)\.mp3$/);
+                        const trackId = match?.[1];
+                        const yandexHref = trackId
+                            ? `track?id=${trackId}`
+                            : track.url;
 
-                return (
-                    <Link href={yandexHref} className={styles.trackRow}>
-                        <span className={styles.num}>{i + 1}</span>
-                        {track.cover ? (
-                            <img
-                                src={track.cover}
-                                alt=""
-                                width={40}
-                                height={40}
-                                className={styles.cover}
-                                loading="lazy"
-                            />
-                        ) : (
-                            <div className={styles.coverPlaceholder} />
-                        )}
-                        <div className={styles.info}>
-                            <div className={styles.title}>
-                                <Highlight
-                                    text={track.title || "—"}
-                                    query={query}
+                        return (
+                            <Link
+                                key={track.url}
+                                href={yandexHref}
+                                className={styles.trackRow}
+                                style={{ height: TRACK_HEIGHT }}
+                            >
+                                <span className={styles.num}>
+                                    {globalIndex + 1}
+                                </span>
+                                {track.cover ? (
+                                    <img
+                                        src={track.cover}
+                                        alt=""
+                                        width={40}
+                                        height={40}
+                                        className={styles.cover}
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <div className={styles.coverPlaceholder} />
+                                )}
+                                <div className={styles.info}>
+                                    <div className={styles.title}>
+                                        <Highlight
+                                            text={track.title || "—"}
+                                            query={query}
+                                        />
+                                    </div>
+                                    <div className={styles.artist}>
+                                        <Highlight
+                                            text={track.artist}
+                                            query={query}
+                                        />
+                                    </div>
+                                </div>
+                                <PlayBtn
+                                    track={{
+                                        id: trackId,
+                                        url: track.url,
+                                        title: track.title || "—",
+                                        artist: track.artist || "",
+                                        cover: track.cover,
+                                        yandexUrl:
+                                            yandexHref !== track.url
+                                                ? yandexHref
+                                                : undefined,
+                                    }}
                                 />
-                            </div>
-                            <div className={styles.artist}>
-                                <Highlight text={track.artist} query={query} />
-                            </div>
-                        </div>
-                        <PlayBtn
-                            track={{
-                                id: trackId,
-                                url: track.url,
-                                title: track.title || "—",
-                                artist: track.artist || "",
-                                cover: track.cover,
-                                yandexUrl:
-                                    yandexHref !== track.url
-                                        ? yandexHref
-                                        : undefined,
-                            }}
-                        />
-                    </Link>
-                );
-            })}
-            {visible < filtered.length && (
-                <div ref={sentinelRef} className={styles.sentinel}>
-                    <span className={styles.loadingDots}>
-                        <span />
-                        <span />
-                        <span />
-                    </span>
+                            </Link>
+                        );
+                    })}
                 </div>
-            )}
+            </div>
         </div>
     );
 }
@@ -864,31 +930,70 @@ function LegacyList({ tracks, query }: LegacyListProps) {
         );
     }, [enriched, query]);
 
-    const [visible, setVisible] = useState(PAGE_SIZE);
-    const sentinelRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<HTMLDivElement>(null);
+    const spacerRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [renderRange, setRenderRange] = useState({ start: 0, end: PAGE_SIZE + BUFFER_SIZE * 2 });
+    const [listOffset, setListOffset] = useState(0);
 
+    // Reset render range when filtered tracks change
     useEffect(() => {
-        setVisible(PAGE_SIZE);
+        setRenderRange({ start: 0, end: PAGE_SIZE + BUFFER_SIZE * 2 });
     }, [filtered]);
 
+    // Calculate offset and handle scroll
     useEffect(() => {
-        const el = sentinelRef.current;
-        if (!el) return;
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting)
-                    setVisible((v) => Math.min(v + PAGE_SIZE, filtered.length));
-            },
-            { rootMargin: "200px" },
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, [filtered.length]);
+        const updateOffset = () => {
+            if (listRef.current) {
+                const rect = listRef.current.getBoundingClientRect();
+                setListOffset(window.scrollY + rect.top);
+            }
+        };
 
-    const slice = filtered.slice(0, visible);
+        updateOffset();
+
+        const handleScroll = () => {
+            const viewportHeight = window.innerHeight;
+            const scrollTop = window.scrollY;
+            
+            // Calculate scroll position relative to the list
+            const listScrollTop = scrollTop - listOffset;
+            
+            // If list is not visible yet, don't render anything
+            if (listScrollTop + viewportHeight < 0) {
+                setRenderRange({ start: 0, end: Math.min(PAGE_SIZE, filtered.length) });
+                return;
+            }
+            
+            // If we're above the list, start from 0
+            const effectiveScrollTop = Math.max(0, listScrollTop);
+
+            const startIdx = Math.max(
+                0,
+                Math.floor(effectiveScrollTop / TRACK_HEIGHT) - BUFFER_SIZE
+            );
+            const endIdx = Math.min(
+                filtered.length,
+                Math.ceil((effectiveScrollTop + viewportHeight) / TRACK_HEIGHT) + BUFFER_SIZE
+            );
+
+            setRenderRange({ start: startIdx, end: endIdx });
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        window.addEventListener('resize', handleScroll, { passive: true });
+        handleScroll(); // Initial calculation
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', handleScroll);
+        };
+    }, [filtered.length, listOffset]);
+
+    const visibleTracks = filtered.slice(renderRange.start, renderRange.end);
 
     return (
-        <div className={styles.list}>
+        <div ref={listRef} className={styles.list}>
             {filtered.length === 0 && (
                 <div className={styles.empty}>
                     {query.trim()
@@ -896,116 +1001,136 @@ function LegacyList({ tracks, query }: LegacyListProps) {
                         : "Failed to load track list"}
                 </div>
             )}
-            {slice.map((track, i) => {
-                const meta = track.meta;
-                const inner = (
-                    <>
-                        <span className={styles.num}>{i + 1}</span>
+            {/* Spacer to maintain correct scroll height */}
+            <div
+                ref={spacerRef}
+                style={{
+                    height: filtered.length * TRACK_HEIGHT,
+                    position: 'relative',
+                }}
+            >
+                {/* Content positioned absolutely within spacer */}
+                <div
+                    ref={contentRef}
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        transform: `translateY(${renderRange.start * TRACK_HEIGHT}px)`,
+                    }}
+                >
+                    {visibleTracks.map((track, i) => {
+                        const globalIndex = renderRange.start + i;
+                        const meta = track.meta;
+                        const inner = (
+                            <>
+                                <span className={styles.num}>
+                                    {globalIndex + 1}
+                                </span>
 
-                        {meta?.cover ? (
-                            <img
-                                src={meta.cover}
-                                alt=""
-                                width={40}
-                                height={40}
-                                className={styles.cover}
-                                loading="lazy"
-                            />
-                        ) : (
-                            <div className={styles.legacyIcon}>
-                                <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                >
-                                    <path
-                                        d="M9 18V5l12-2v13"
-                                        stroke="var(--muted)"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                    <circle
-                                        cx="6"
-                                        cy="18"
-                                        r="3"
-                                        stroke="var(--muted)"
-                                        strokeWidth="1.5"
-                                    />
-                                    <circle
-                                        cx="18"
-                                        cy="16"
-                                        r="3"
-                                        stroke="var(--muted)"
-                                        strokeWidth="1.5"
-                                    />
-                                </svg>
-                            </div>
-                        )}
-
-                        <div className={styles.info}>
-                            <div className={styles.title}>
-                                <Highlight
-                                    text={meta?.title ?? `Track #${track.id}`}
-                                    query={query}
-                                />
-                            </div>
-                            <div className={styles.artist}>
-                                {meta?.artist ? (
-                                    <Highlight
-                                        text={meta.artist}
-                                        query={query}
+                                {meta?.cover ? (
+                                    <img
+                                        src={meta.cover}
+                                        alt=""
+                                        width={40}
+                                        height={40}
+                                        className={styles.cover}
+                                        loading="lazy"
                                     />
                                 ) : (
-                                    <span style={{ opacity: 0.45 }}>
-                                        ID: {track.id}
-                                    </span>
+                                    <div className={styles.legacyIcon}>
+                                        <svg
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                        >
+                                            <path
+                                                d="M9 18V5l12-2v13"
+                                                stroke="var(--muted)"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                            <circle
+                                                cx="6"
+                                                cy="18"
+                                                r="3"
+                                                stroke="var(--muted)"
+                                                strokeWidth="1.5"
+                                            />
+                                            <circle
+                                                cx="18"
+                                                cy="16"
+                                                r="3"
+                                                stroke="var(--muted)"
+                                                strokeWidth="1.5"
+                                            />
+                                        </svg>
+                                    </div>
                                 )}
-                            </div>
-                        </div>
-                        <PlayBtn
-                            track={{
-                                id: track.id,
-                                url: track.url,
-                                title: meta?.title ?? `Track #${track.id}`,
-                                artist: meta?.artist ?? "",
-                                cover: meta?.cover,
-                                yandexUrl: track.yandexUrl,
-                            }}
-                        />
-                    </>
-                );
 
-                return meta ? (
-                    <Link
-                        key={track.id}
-                        href={`/track?id=${track.id}`}
-                        className={styles.trackRow}
-                    >
-                        {inner}
-                    </Link>
-                ) : (
-                    <a
-                        key={track.id}
-                        href={track.yandexUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.trackRow}
-                    >
-                        {inner}
-                    </a>
-                );
-            })}
-            {visible < filtered.length && (
-                <div ref={sentinelRef} className={styles.sentinel}>
-                    <span className={styles.loadingDots}>
-                        <span />
-                        <span />
-                        <span />
-                    </span>
+                                <div className={styles.info}>
+                                    <div className={styles.title}>
+                                        <Highlight
+                                            text={
+                                                meta?.title ??
+                                                `Track #${track.id}`
+                                            }
+                                            query={query}
+                                        />
+                                    </div>
+                                    <div className={styles.artist}>
+                                        {meta?.artist ? (
+                                            <Highlight
+                                                text={meta.artist}
+                                                query={query}
+                                            />
+                                        ) : (
+                                            <span style={{ opacity: 0.45 }}>
+                                                ID: {track.id}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                <PlayBtn
+                                    track={{
+                                        id: track.id,
+                                        url: track.url,
+                                        title: meta?.title ?? `Track #${track.id}`,
+                                        artist: meta?.artist ?? "",
+                                        cover: meta?.cover,
+                                        yandexUrl: track.yandexUrl,
+                                    }}
+                                />
+                            </>
+                        );
+
+                        return meta ? (
+                            <Link
+                                key={track.id}
+                                href={`/track?id=${track.id}`}
+                                className={styles.trackRow}
+                                style={{ height: TRACK_HEIGHT }}
+                            >
+                                {inner}
+                            </Link>
+                        ) : (
+                            <a
+                                key={track.id}
+                                href={track.yandexUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.trackRow}
+                                style={{ height: TRACK_HEIGHT }}
+                            >
+                                {inner}
+                            </a>
+                        );
+                    })}
                 </div>
-            )}
+            </div>
         </div>
     );
 }
