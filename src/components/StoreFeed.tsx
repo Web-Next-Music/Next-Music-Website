@@ -1,33 +1,15 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import styles from "./StoreFeed.module.css";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type Tag = "Next Music" | "PulseSync" | "Web";
-
-interface ReleaseAsset {
-    name: string;
-    url: string;
-    ext: string;
-}
-
-interface Extension {
-    id: string;
-    name: string;
-    description: string;
-    author: string;
-    tags: Tag[];
-    isTheme: boolean;
-    logo?: string;
-    readmeUrl?: string;
-    readmeBaseUrl?: string;
-    userJsUrl?: string;
-    repo?: string;
-    downloadZip?: string;
-    releaseAssets: ReleaseAsset[];
-    clients: ("nm" | "ps" | "web")[];
-}
+import {
+    Extension,
+    ReleaseAsset,
+    Tag,
+    getCachedData,
+    saveToCache,
+    refreshCacheTimestamp,
+    cacheMatchesNewData,
+} from "@/lib/addonCache";
 
 // ─── GitHub helpers ───────────────────────────────────────────────────────────
 
@@ -1605,10 +1587,43 @@ export default function NextMusicStore() {
     const fetchExtensions = useCallback(async () => {
         setLoading(true);
         setError(null);
+
+        // 1. Check cache first
+        const cached = getCachedData();
+
+        // If we have cached data and it's still fresh, use it immediately
+        if (cached.exts && !cached.needsRefresh) {
+            setExtensions(cached.exts);
+            setLoading(false);
+            return;
+        }
+
+        // 2. Try to fetch fresh data from GitHub
         try {
-            setExtensions(await loadExtensions(setLoadingMsg));
+            const freshExts = await loadExtensions(setLoadingMsg);
+
+            // Check if the data actually changed from what we have cached
+            if (cached.exts && cacheMatchesNewData(freshExts)) {
+                // Data matches — update cache timestamp and use cached data
+                refreshCacheTimestamp();
+                setExtensions(cached.exts);
+                setLoading(false);
+                return;
+            }
+
+            // Data changed or no cache — save fresh data and use it
+            saveToCache(freshExts);
+            setExtensions(freshExts);
         } catch (e: any) {
-            setError(e.message ?? "Failed to load extensions");
+            // 3. GitHub API failed — fall back to cache if available
+            if (cached.exts) {
+                setExtensions(cached.exts);
+                console.warn(
+                    "[StoreFeed] Using cached data (GitHub API unavailable)",
+                );
+            } else {
+                setError(e.message ?? "Failed to load extensions");
+            }
         } finally {
             setLoading(false);
         }
@@ -1889,7 +1904,10 @@ export default function NextMusicStore() {
                                             style={{
                                                 animationDelay: `${idx * 40}ms`,
                                             }}
-                                            onClick={() => setSelectedExt(ext)}
+                                            onClick={() => {
+                                                const slug = ext.name.toLowerCase().replace(/\s+/g, "-");
+                                                window.location.href = `/addon?name=${slug}`;
+                                            }}
                                             onDownload={(e) => {
                                                 e.stopPropagation();
                                                 setDownloadTarget(ext);
