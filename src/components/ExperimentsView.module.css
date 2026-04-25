@@ -162,13 +162,15 @@
 	border: 1px solid var(--border);
 	border-radius: 8px;
 	padding: 7px 12px;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 	transition:
 		border-color 0.15s,
 		background 0.15s,
 		color 0.15s;
+
+	white-space: normal;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	hyphens: auto;
 }
 
 .flag:hover {
