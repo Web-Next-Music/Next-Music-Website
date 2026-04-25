@@ -30,6 +30,7 @@
 	font-family: var(--font-heading-large);
 	font-weight: 700;
 	font-size: 23px;
+	flex-shrink: 0;
 }
 
 .logoImg {
@@ -39,7 +40,10 @@
 	background-image: url("/icons/icon-256.png");
 	background-size: cover;
 	border: 1px solid var(--border);
+	flex-shrink: 0;
 }
+
+/* ── Full nav ─────────────────────────────────────────────────────────────── */
 
 .nav {
 	display: flex;
@@ -56,6 +60,7 @@
 	transition: all 0.2s;
 	font-family: var(--font-heading-large);
 	font-weight: 700;
+	white-space: nowrap;
 }
 
 .nav a:hover {
@@ -63,6 +68,120 @@
 	border-color: var(--border);
 	background: var(--surface);
 }
+
+/* ── Burger button ────────────────────────────────────────────────────────── */
+
+.burger {
+	display: none;
+	position: relative;
+}
+
+.burgerBtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	background: none;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	cursor: pointer;
+	color: var(--muted);
+	transition:
+		border-color 0.2s,
+		color 0.2s,
+		background 0.2s;
+}
+
+.burgerBtn:hover {
+	border-color: rgba(43, 254, 245, 0.35);
+	color: var(--text);
+	background: var(--surface);
+}
+
+.burgerIcon {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 16px;
+}
+
+.burgerIcon span {
+	display: block;
+	height: 2px;
+	background: currentColor;
+	border-radius: 2px;
+	transform-origin: center;
+	transition:
+		transform 0.22s ease,
+		opacity 0.22s ease,
+		width 0.22s ease;
+}
+
+/* Animate to × when open */
+.burgerIconOpen span:nth-child(1) {
+	transform: translateY(6px) rotate(45deg);
+}
+.burgerIconOpen span:nth-child(2) {
+	opacity: 0;
+	width: 0;
+}
+.burgerIconOpen span:nth-child(3) {
+	transform: translateY(-6px) rotate(-45deg);
+}
+
+/* ── Dropdown menu ────────────────────────────────────────────────────────── */
+
+.dropdown {
+	position: absolute;
+	top: calc(100% + 10px);
+	right: 0;
+	min-width: 180px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	box-shadow: 0 8px 24px var(--shadow);
+	display: flex;
+	flex-direction: column;
+	padding: 6px;
+	gap: 2px;
+	animation: dropIn 0.15s ease;
+	z-index: 100;
+}
+
+@keyframes dropIn {
+	from {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.dropdownLink {
+	font-family: var(--font-heading-large);
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--muted);
+	padding: 8px 12px;
+	border-radius: 7px;
+	border: 1px solid transparent;
+	transition:
+		color 0.15s,
+		background 0.15s,
+		border-color 0.15s;
+	white-space: nowrap;
+}
+
+.dropdownLink:hover {
+	color: var(--text);
+	background: var(--surface2);
+	border-color: var(--border);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
 	.header {
@@ -72,8 +191,14 @@
 	.headerWrap {
 		padding: 0;
 	}
+}
 
-	.logoText {
+@media (max-width: 600px) {
+	.nav {
 		display: none;
+	}
+
+	.burger {
+		display: block;
 	}
 }
