@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import styles from "./Header.module.css";
+import { useRouter } from "next/navigation";
 
 const NAV_LINKS = [
 	{ href: "/", label: "Home" },
@@ -14,6 +15,7 @@ const NAV_LINKS = [
 export default function Header() {
 	const [open, setOpen] = useState(false);
 	const burgerRef = useRef<HTMLDivElement>(null);
+	const router = useRouter();
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
@@ -28,7 +30,9 @@ export default function Header() {
 	// Close dropdown on Escape
 	useEffect(() => {
 		if (!open) return;
-		const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+		const handler = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setOpen(false);
+		};
 		document.addEventListener("keydown", handler);
 		return () => document.removeEventListener("keydown", handler);
 	}, [open]);
@@ -38,14 +42,23 @@ export default function Header() {
 			<header className={styles.header}>
 				<div className={styles.headerWrap}>
 					<div className={styles.logo}>
-						<div className={styles.logoImg} />
-						<div className={styles.logoText}>Next Music</div>
+						<div className={styles.logo}>
+							<div
+								className={styles.logoImg}
+								onClick={() => router.push("/")}
+							/>
+						</div>
+						<div className={styles.logoText} onClick={() => router.push("/")}>
+							Next Music
+						</div>
 					</div>
 
 					{/* Full nav — hidden when there's not enough space */}
 					<nav className={styles.nav}>
 						{NAV_LINKS.map((l) => (
-							<Link key={l.href} href={l.href}>{l.label}</Link>
+							<Link key={l.href} href={l.href}>
+								{l.label}
+							</Link>
 						))}
 					</nav>
 
@@ -57,7 +70,9 @@ export default function Header() {
 							aria-label="Toggle navigation menu"
 							aria-expanded={open}
 						>
-							<span className={`${styles.burgerIcon} ${open ? styles.burgerIconOpen : ""}`}>
+							<span
+								className={`${styles.burgerIcon} ${open ? styles.burgerIconOpen : ""}`}
+							>
 								<span />
 								<span />
 								<span />

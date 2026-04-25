@@ -31,6 +31,7 @@
 	font-weight: 700;
 	font-size: 23px;
 	flex-shrink: 0;
+	cursor: pointer;
 }
 
 .logoImg {
@@ -43,8 +44,7 @@
 	flex-shrink: 0;
 }
 
-/* ── Full nav ─────────────────────────────────────────────────────────────── */
-
+/* Full nav */
 .nav {
 	display: flex;
 	gap: 8px;
@@ -69,8 +69,7 @@
 	background: var(--surface);
 }
 
-/* ── Burger button ────────────────────────────────────────────────────────── */
-
+/* Burger button */
 .burger {
 	display: none;
 	position: relative;
@@ -130,8 +129,7 @@
 	transform: translateY(-6px) rotate(-45deg);
 }
 
-/* ── Dropdown menu ────────────────────────────────────────────────────────── */
-
+/* Dropdown menu */
 .dropdown {
 	position: absolute;
 	top: calc(100% + 10px);
@@ -181,8 +179,7 @@
 	border-color: var(--border);
 }
 
-/* ── Responsive ──────────────────────────────────────────────────────────── */
-
+/* Responsive */
 @media (max-width: 900px) {
 	.header {
 		padding: 10px;
