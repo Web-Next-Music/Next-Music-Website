@@ -576,7 +576,7 @@ function TrackPageContent() {
 												if (!player?.isPlaying) player?.resume();
 											}}
 										>
-											{line.text}
+											<span className={styles.lyricText}>{line.text}</span>
 										</div>
 									))}
 									<div className={styles.lyricsBottomPad} />

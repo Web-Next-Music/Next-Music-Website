@@ -489,7 +489,7 @@
 
 .lyricLine {
 	font-size: 17px;
-	font-weight: 500;
+	font-weight: 700;
 	line-height: 1.5;
 	padding: 6px 10px;
 	border-radius: 8px;
@@ -498,13 +498,18 @@
 	opacity: 0.5;
 	transition:
 		color 0.3s ease,
-		font-size 0.25s ease,
-		font-weight 0.25s ease,
 		opacity 0.3s ease,
 		transform 0.25s ease,
 		background 0.15s ease;
 	font-family: "Montserrat", sans-serif;
 	animation: lineIn 0.35s ease both;
+}
+
+.lyricText {
+	display: inline-block;
+	width: calc(100% - 18px);
+	transform-origin: left center;
+	transition: transform 0.25s ease;
 }
 
 @keyframes lineIn {
@@ -530,7 +535,6 @@
 
 .lyricLineActive {
 	color: var(--text) !important;
-	font-weight: 700 !important;
 	opacity: 1 !important;
 	transform: translateX(4px);
 	background: rgba(43, 254, 245, 0.05);
@@ -538,6 +542,10 @@
 
 .lyricLineActive:hover {
 	background: rgba(43, 254, 245, 0.1);
+}
+
+.lyricLineActive .lyricText {
+	transform: scale(1.06);
 }
 
 .plainLyrics {
@@ -628,9 +636,5 @@
 		position: static;
 		height: 55vh;
 		min-height: 300px;
-	}
-
-	.lyricLineActive {
-		font-size: 18px !important;
 	}
 }
