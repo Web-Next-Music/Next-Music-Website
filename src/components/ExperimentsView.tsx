@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import styles from "./experiments.module.css";
+import styles from "./Experiments.module.css";
 
 // Row height (item height + gap) must match the CSS values in experiments.module.css
 const ROW_H = 36;
