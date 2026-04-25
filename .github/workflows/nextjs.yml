@@ -61,6 +61,10 @@ jobs:
         run: npm run fetch-meta
         env:
           YANDEX_TOKEN: ${{ secrets.YANDEX_TOKEN }}
+      - name: Fetch experiments
+        run: npm run fetch-experiments
+        env:
+          YANDEX_TOKEN: ${{ secrets.YANDEX_TOKEN }}
 
       - name: Build with Next.js
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
