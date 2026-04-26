@@ -13,7 +13,6 @@
 	color: var(--text);
 	font-family: var(--font-heading-large, "Syne", sans-serif);
 	min-height: 100vh;
-	margin-top: var(--mini-player-h);
 }
 
 .root ::-webkit-scrollbar {
@@ -33,11 +32,13 @@
 
 .tabs {
 	border-bottom: 1px solid var(--border);
-	background: var(--bg);
+	background: var(--header);
 	position: sticky;
-	top: 0;
+	top: calc(60px + var(--mini-player-h));
+	backdrop-filter: blur(12px);
 	z-index: 20;
 }
+
 .tabsInner {
 	display: flex;
 	gap: 4px;
@@ -91,10 +92,11 @@
 }
 
 .toolbar {
-	background: var(--bg);
+	background: var(--header);
 	border-bottom: 1px solid var(--border);
 	position: sticky;
-	top: 44px;
+	top: calc(108px + var(--mini-player-h));
+	backdrop-filter: blur(12px);
 	z-index: 19;
 }
 .toolbarInner {
@@ -437,6 +439,7 @@
 	padding: 28px;
 	max-width: 860px;
 	margin: 0 auto;
+	margin-top: var(--mini-player-h);
 }
 .extPageBack {
 	margin-bottom: 24px;

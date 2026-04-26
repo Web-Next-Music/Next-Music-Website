@@ -221,6 +221,32 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 	const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const audioRef = useRef<HTMLAudioElement>(null);
+	const isRestoringRef = useRef(false);
+	const currentTrackUrlRef = useRef<string | null>(null);
+	const pendingSeekTimeRef = useRef<number>(0);
+
+	useEffect(() => {
+		const saved = localStorage.getItem("nm-now-playing");
+		const savedTime = localStorage.getItem("nm-playback-time");
+		if (saved) {
+			try {
+				isRestoringRef.current = true;
+				pendingSeekTimeRef.current = savedTime ? parseFloat(savedTime) : 0;
+				setNowPlaying(JSON.parse(saved));
+				setIsPlaying(true);
+			} catch (e) {
+				console.error("Failed to restore player state:", e);
+			}
+		}
+	}, []);
+
+	useEffect(() => {
+		if (nowPlaying) {
+			localStorage.setItem("nm-now-playing", JSON.stringify(nowPlaying));
+		} else {
+			localStorage.removeItem("nm-now-playing");
+		}
+	}, [nowPlaying]);
 
 	useRichPresenceWS(nowPlaying, isPlaying, audioRef);
 
@@ -249,8 +275,40 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 	useEffect(() => {
 		const audio = audioRef.current;
 		if (!audio || !nowPlaying) return;
-		audio.src = nowPlaying.url;
-		audio.play().catch(console.error);
+
+		if (currentTrackUrlRef.current !== nowPlaying.url) {
+			currentTrackUrlRef.current = nowPlaying.url;
+			audio.src = nowPlaying.url;
+			if (isRestoringRef.current) {
+				const seekTime = pendingSeekTimeRef.current;
+				audio.addEventListener(
+					"loadedmetadata",
+					() => {
+						audio.currentTime = seekTime;
+						audio.play().catch(console.error);
+						isRestoringRef.current = false;
+					},
+					{ once: true },
+				);
+			} else {
+				audio.currentTime = 0;
+				audio.play().catch(console.error);
+			}
+		}
+	}, [nowPlaying]);
+
+	useEffect(() => {
+		const audio = audioRef.current;
+		if (!audio) return;
+
+		const saveTime = () => {
+			if (nowPlaying) {
+				localStorage.setItem("nm-playback-time", audio.currentTime.toString());
+			}
+		};
+
+		audio.addEventListener("timeupdate", saveTime);
+		return () => audio.removeEventListener("timeupdate", saveTime);
 	}, [nowPlaying]);
 
 	return (
@@ -340,7 +398,7 @@ export function MiniPlayerInner() {
 		const root = document.documentElement;
 		if (nowPlaying) {
 			document.body.classList.add("has-mini-player");
-			root.style.setProperty("--mini-player-h", "48px");
+			root.style.setProperty("--mini-player-h", "47px");
 		} else {
 			document.body.classList.remove("has-mini-player");
 			root.style.setProperty("--mini-player-h", "0px");
