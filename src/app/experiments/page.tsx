@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import ExperimentsView from "../../components/ExperimentsView";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import ExperimentsView from "@/components/experiments/ExperimentsView";
 import data from "@/data/experiments.json";
 
 export const metadata: Metadata = {

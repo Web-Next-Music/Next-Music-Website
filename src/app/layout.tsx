@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/lib/theme";
-import { PlayerProvider } from "@/components/FckCensorTabs";
+import { PlayerProvider } from "@/components/fckcensor/FckCensorTabs";
 import "./globals.css";
 
 export const metadata: Metadata = {

@@ -1,6 +1,6 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import FckCensorTabs from "@/components/FckCensorTabs";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import FckCensorTabs from "@/components/fckcensor/FckCensorTabs";
 import Image from "next/image";
 import styles from "./page.module.css";
 import { Metadata } from "next";

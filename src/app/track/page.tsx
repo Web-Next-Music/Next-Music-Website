@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { usePlayer } from "@/components/FckCensorTabs";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import { usePlayer } from "@/components/fckcensor/FckCensorTabs";
 import {
 	ensureTracksLoaded,
 	subscribeStore,
