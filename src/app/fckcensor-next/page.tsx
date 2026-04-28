@@ -27,7 +27,7 @@ export default function FckCensorPage() {
 				<div className={styles.addonHero}>
 					<Image
 						className={styles.addonIcon}
-						src="https://github.com/Web-Next-Music/FckCensor-Next/blob/main/FckCensor%20Next/icon.webp?raw=true"
+						src="https://raw.githubusercontent.com/Web-Next-Music/FckCensor-Next/refs/heads/main/src/icon.webp"
 						width={48}
 						height={48}
 						alt="addon icon"
