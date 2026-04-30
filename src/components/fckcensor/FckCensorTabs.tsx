@@ -225,29 +225,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 	const currentTrackUrlRef = useRef<string | null>(null);
 	const pendingSeekTimeRef = useRef<number>(0);
 
-	useEffect(() => {
-		const saved = localStorage.getItem("nm-now-playing");
-		const savedTime = localStorage.getItem("nm-playback-time");
-		if (saved) {
-			try {
-				isRestoringRef.current = true;
-				pendingSeekTimeRef.current = savedTime ? parseFloat(savedTime) : 0;
-				setNowPlaying(JSON.parse(saved));
-				setIsPlaying(true);
-			} catch (e) {
-				console.error("Failed to restore player state:", e);
-			}
-		}
-	}, []);
-
-	useEffect(() => {
-		if (nowPlaying) {
-			localStorage.setItem("nm-now-playing", JSON.stringify(nowPlaying));
-		} else {
-			localStorage.removeItem("nm-now-playing");
-		}
-	}, [nowPlaying]);
-
 	useRichPresenceWS(nowPlaying, isPlaying, audioRef);
 
 	const play = useCallback((track: NowPlaying) => {
@@ -296,20 +273,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 				audio.play().catch(console.error);
 			}
 		}
-	}, [nowPlaying]);
-
-	useEffect(() => {
-		const audio = audioRef.current;
-		if (!audio) return;
-
-		const saveTime = () => {
-			if (nowPlaying) {
-				localStorage.setItem("nm-playback-time", audio.currentTime.toString());
-			}
-		};
-
-		audio.addEventListener("timeupdate", saveTime);
-		return () => audio.removeEventListener("timeupdate", saveTime);
 	}, [nowPlaying]);
 
 	return (
