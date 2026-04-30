@@ -7,6 +7,7 @@ export interface WsPayload {
 	albumUrl: string | null;
 	artistUrl: string | null;
 	trackUrl: string | null;
+	nmUGCPlayerUrl: string | null;
 	positionSec: number;
 	durationSec: number;
 	playerState: string | null;

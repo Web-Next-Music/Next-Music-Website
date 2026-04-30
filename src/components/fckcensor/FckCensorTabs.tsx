@@ -103,6 +103,18 @@ function useRichPresenceWS(
 			const durationSec =
 				audio?.duration && isFinite(audio.duration) ? audio.duration : 0;
 			const trackId = np?.id ?? np?.url.match(/\/(\d+)\.mp3$/)?.[1] ?? "";
+			const trackUrl = np?.directUrl ?? np?.url ?? null;
+			const nmUGCPlayerUrl = trackId.includes("-")
+				? (() => {
+						const params = new URLSearchParams({
+							url: trackUrl || "",
+							...(np?.title && { title: np.title }),
+							...(np?.artist && { artist: np.artist }),
+							...(np?.cover && { cover: np.cover }),
+						});
+						return `${window.location.origin}/track?${params.toString()}`;
+					})()
+				: null;
 			return {
 				playerState: state,
 				title: np?.title ?? "",
@@ -111,6 +123,8 @@ function useRichPresenceWS(
 				albumUrl: "",
 				artistUrl: "",
 				trackId,
+				trackUrl,
+				nmUGCPlayerUrl,
 				positionSec,
 				durationSec,
 			};
