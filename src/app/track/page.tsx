@@ -152,53 +152,18 @@ function TrackPageContent() {
 			return;
 		}
 
-		setUgcState("loading");
+		setUgcState("playing");
 
-		(async () => {
-			let title = "Unknown";
-			let artist = "";
-			let cover = "";
-
-			try {
-				const { parseBlob } = await import("music-metadata-browser");
-				const res = await fetch(directUrl!, {
-					headers: { Range: "bytes=0-131072" },
-				});
-				if (!res.ok) throw new Error("fetch failed");
-				const blob = await res.blob();
-				const meta = await parseBlob(blob);
-
-				title = paramTitle ?? meta.common.title ?? "Unknown";
-				artist = paramArtist ?? meta.common.artist ?? "";
-
-				const pic = meta.common.picture?.[0];
-				if (pic && !paramCover) {
-					const imgBlob = new Blob([new Uint8Array(pic.data)], {
-						type: pic.format,
-					});
-					cover = URL.createObjectURL(imgBlob);
-				} else if (paramCover) {
-					cover = paramCover;
-				}
-			} catch (e) {
-				console.warn("Failed to read ID3 tags:", e);
-				setUgcState("error");
-				return;
-			}
-
-			player.play({
-				id: undefined,
-				url: directUrl,
-				directUrl,
-				title,
-				artist,
-				cover,
-				yandexUrl: "",
-			});
-
-			setUgcState("playing");
-		})();
-	}, [player]);
+		player.play({
+			id: undefined,
+			url: directUrl,
+			directUrl,
+			title: paramTitle ?? "Unknown",
+			artist: paramArtist ?? "",
+			cover: paramCover ?? "",
+			yandexUrl: "",
+		});
+	}, [player, directUrl, paramTitle, paramArtist, paramCover]);
 
 	useEffect(() => {
 		if (!track?.title) return;
