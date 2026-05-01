@@ -334,7 +334,7 @@ function TrackPageContent({ isHiddenMode }: { isHiddenMode: boolean }) {
 					<span />
 					<span />
 				</div>
-				<p className={styles.centeredDesc}>Loading track list…</p>
+				<p className={styles.centeredDesc}>Loading track…</p>
 			</div>
 		);
 	}
