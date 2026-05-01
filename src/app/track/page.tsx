@@ -8,9 +8,7 @@ export const metadata: Metadata = {
 	openGraph: {
 		title: "Next Music Player",
 		description: "Custom web player for Yandex Music",
-		images: [
-			"https://gitlab.com/uploads/-/system/project/avatar/81825008/ugcShare.png",
-		],
+		images: ["https://nm.diram1x.ru/icons/ugcShare.webp"],
 		type: "website",
 	},
 };
