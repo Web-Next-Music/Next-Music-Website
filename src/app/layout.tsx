@@ -14,7 +14,6 @@ export const metadata: Metadata = {
 		images: [
 			"https://github.com/Web-Next-Music/Next-Music-Client/raw/main/doc/preview.png?raw=true",
 		],
-		url: "https://nextmusic.diram1x.ru",
 		type: "website",
 	},
 };
