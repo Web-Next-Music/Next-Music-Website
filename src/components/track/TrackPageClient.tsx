@@ -671,6 +671,7 @@ function TrackPageContent({ isHiddenMode }: { isHiddenMode: boolean }) {
 														const a = player?.audioRef.current;
 														if (a && a.readyState >= 1) {
 															a.currentTime = line.time;
+															a.play().catch(console.error);
 														} else {
 															setTimeout(trySeek, 50);
 														}
