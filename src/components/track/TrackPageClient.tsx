@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { usePlayer } from "@/components/fckcensor/FckCensorTabs";
+import { usePlayer } from "@/lib/miniplayer";
 import {
 	ensureTracksLoaded,
 	subscribeStore,

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ThemeProvider } from "@/lib/theme";
-import { PlayerProvider } from "@/components/fckcensor/FckCensorTabs";
+import { PlayerProvider } from "@/lib/miniplayer";
 import "./globals.css";
 
 export const metadata: Metadata = {
