@@ -3,8 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePlayer } from "@/lib/miniplayer/context";
+import {
+	useDesktopRpcEnabled,
+	setDesktopRpcEnabled,
+} from "@/lib/miniplayer/hooks";
 import { encodeTrackKey, decodeTrackKey } from "@/lib/track/trackKey";
 import LikeButton from "@/components/common/LikeButton";
+import LogoIcon from "@/components/common/LogoIcon";
 import styles from "./MiniPlayer.module.scss";
 
 export function MiniPlayerInner({ isHiddenMode }: { isHiddenMode: boolean }) {
@@ -17,6 +22,7 @@ export function MiniPlayerInner({ isHiddenMode }: { isHiddenMode: boolean }) {
 	const [volume, setVolume] = useState(1);
 	const [muted, setMuted] = useState(false);
 	const progressRef = useRef<HTMLDivElement>(null);
+	const rpcEnabled = useDesktopRpcEnabled();
 
 	const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const val = parseFloat(e.target.value);
@@ -268,6 +274,24 @@ export function MiniPlayerInner({ isHiddenMode }: { isHiddenMode: boolean }) {
 						/>
 					</div>
 				</div>
+
+				<button
+					className={`${styles.btn} ${styles.rpcBtn}`}
+					onClick={() => setDesktopRpcEnabled(!rpcEnabled)}
+					aria-label={
+						rpcEnabled
+							? "Disable desktop Discord status"
+							: "Enable desktop Discord status"
+					}
+					title={
+						rpcEnabled
+							? "Desktop Discord status: on"
+							: "Desktop Discord status: off (opens the Next Music app)"
+					}
+					style={{ opacity: rpcEnabled ? 1 : 0.4 }}
+				>
+					<LogoIcon size={18} />
+				</button>
 
 				<button
 					className={styles.btn}

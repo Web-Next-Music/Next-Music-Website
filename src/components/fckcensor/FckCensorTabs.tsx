@@ -5,35 +5,22 @@ import {
 	useEffect,
 	useRef,
 	useMemo,
-	useCallback,
 	useSyncExternalStore,
 } from "react";
-import {
-	M3U_URL,
-	LEGACY_URL,
-	TRACK_META,
-	parseM3U,
-	parseLegacy,
-	type OfficialTrack,
-	type LegacyTrack,
-	type TrackMeta,
-} from "@/lib/fckcensor";
+import { TRACK_META, type TrackMeta } from "@/lib/fckcensor";
 import {
 	ensureTracksLoaded,
 	subscribeStore,
 	getStoreSnapshot,
 	getServerSnapshot,
-	findTrackById,
 } from "@/lib/track/trackStore";
 import { Plus, Check, Pause, Play, Music } from "lucide-react";
-import { usePlayer, PlayerProvider } from "@/lib/miniplayer";
-import { MiniPlayerInner } from "@/components/miniplayer/MiniPlayer";
+import { usePlayer } from "@/lib/miniplayer";
 import LikeButton from "@/components/common/LikeButton";
 import Menu from "@/components/ui/Menu";
 import menuStyles from "@/components/ui/Menu.module.scss";
 import SearchInput from "@/components/ui/SearchInput";
 import { cx } from "@/lib/cx";
-import Tabs from "@/components/ui/Tabs";
 import { useAuth } from "@/lib/auth";
 import {
 	getPlaylists,
@@ -44,13 +31,7 @@ import {
 } from "@/lib/supabase/playlists";
 import styles from "./FckCensorTabs.module.scss";
 import TrackLink from "@/components/common/TrackLink";
-import type {
-	PlayBtnProps,
-	SearchBarProps,
-	OfficialListProps,
-	LegacyListProps,
-	DownloadTabProps,
-} from "@/types/ui";
+import type { PlayBtnProps, SearchBarProps, LegacyListProps } from "@/types/ui";
 
 export type { NowPlaying } from "@/types/player";
 
@@ -148,25 +129,6 @@ const PAGE_SIZE = 20;
 const TRACK_HEIGHT = 58;
 const BUFFER_SIZE = 10;
 
-type TabId = "official" | "legacy";
-
-const TAB_HASHES: Record<TabId, string> = {
-	official: "#m3u",
-	legacy: "#json",
-};
-
-const HASH_TO_TAB: Record<string, TabId> = {
-	"#m3u": "official",
-	"#json": "legacy",
-};
-
-function getTabFromHash(): TabId {
-	if (typeof window === "undefined") return "official";
-	const hash = window.location.hash.toLowerCase();
-	if (!hash) return "official";
-	return HASH_TO_TAB[hash] ?? "official";
-}
-
 function PlayBtn({ track }: PlayBtnProps) {
 	const player = usePlayer();
 	if (!player) return null;
@@ -199,178 +161,17 @@ function PlayBtn({ track }: PlayBtnProps) {
 
 function SearchBar({ value, onChange }: SearchBarProps) {
 	return (
-		<div className={styles.searchWrap}>
-			<SearchInput
-				radius="pill"
-				placeholder="Search by title, artist or ID..."
-				value={value}
-				onChange={(e) => onChange(e.target.value)}
-				onClear={() => onChange("")}
-				spellCheck={false}
-			/>
-		</div>
-	);
-}
-
-function OfficialList({ tracks, query, playlists }: OfficialListProps) {
-	const filtered = useMemo(() => {
-		const q = query.trim().toLowerCase();
-		if (!q) return tracks;
-		return tracks.filter(
-			(t) =>
-				t.title?.toLowerCase().includes(q) ||
-				t.artist?.toLowerCase().includes(q) ||
-				(t.url.match(/\/(\d+)\.mp3$/)?.[1] ?? "").includes(q),
-		);
-	}, [tracks, query]);
-
-	const listRef = useRef<HTMLDivElement>(null);
-	const spacerRef = useRef<HTMLDivElement>(null);
-	const contentRef = useRef<HTMLDivElement>(null);
-	const [renderRange, setRenderRange] = useState({
-		start: 0,
-		end: PAGE_SIZE + BUFFER_SIZE * 2,
-	});
-
-	useEffect(() => {
-		setRenderRange({ start: 0, end: PAGE_SIZE + BUFFER_SIZE * 2 });
-	}, [filtered]);
-
-	useEffect(() => {
-		const handleScroll = () => {
-			if (!listRef.current) return;
-			const viewportHeight = window.innerHeight;
-			const listScrollTop = -listRef.current.getBoundingClientRect().top;
-
-			if (listScrollTop + viewportHeight < 0) {
-				setRenderRange({ start: 0, end: Math.min(PAGE_SIZE, filtered.length) });
-				return;
-			}
-
-			const effectiveScrollTop = Math.max(0, listScrollTop);
-
-			const startIdx = Math.max(
-				0,
-				Math.floor(effectiveScrollTop / TRACK_HEIGHT) - BUFFER_SIZE,
-			);
-			const endIdx = Math.min(
-				filtered.length,
-				Math.ceil((effectiveScrollTop + viewportHeight) / TRACK_HEIGHT) +
-					BUFFER_SIZE,
-			);
-
-			setRenderRange({ start: startIdx, end: endIdx });
-		};
-
-		window.addEventListener("scroll", handleScroll, {
-			passive: true,
-			capture: true,
-		});
-		window.addEventListener("resize", handleScroll, { passive: true });
-		handleScroll();
-
-		return () => {
-			window.removeEventListener("scroll", handleScroll, { capture: true });
-			window.removeEventListener("resize", handleScroll);
-		};
-	}, [filtered.length]);
-
-	const visibleTracks = filtered.slice(renderRange.start, renderRange.end);
-
-	return (
-		<div ref={listRef} className={styles.list}>
-			{filtered.length === 0 && (
-				<div className={styles.empty}>
-					{query.trim() ? "No results found" : "Failed to load track list"}
-				</div>
-			)}
-			<div
-				ref={spacerRef}
-				style={{
-					height: filtered.length * TRACK_HEIGHT,
-					position: "relative",
-				}}
-			>
-				<div
-					ref={contentRef}
-					style={{
-						position: "absolute",
-						top: 0,
-						left: 0,
-						right: 0,
-						transform: `translateY(${renderRange.start * TRACK_HEIGHT}px)`,
-					}}
-				>
-					{visibleTracks.map((track, i) => {
-						const globalIndex = renderRange.start + i;
-						const match = track.url.match(/\/(\d+)\.mp3$/);
-						const trackId = match?.[1];
-						const yandexHref = trackId ? `track?id=${trackId}` : track.url;
-						const linkHref = trackId ? `/track?id=${trackId}` : track.url;
-
-						return (
-							<TrackLink
-								key={track.url}
-								href={linkHref}
-								className={styles.trackRow}
-								style={{ height: TRACK_HEIGHT }}
-							>
-								<span className={styles.num}>{globalIndex + 1}</span>
-								{track.cover ? (
-									<img
-										src={track.cover}
-										alt=""
-										width={40}
-										height={40}
-										className={styles.cover}
-										loading="lazy"
-									/>
-								) : (
-									<div className={styles.coverPlaceholder} />
-								)}
-								<div className={styles.info}>
-									<div className={styles.title}>
-										<Highlight text={track.title || "-"} query={query} />
-									</div>
-									<div className={styles.artist}>
-										<Highlight text={track.artist} query={query} />
-									</div>
-								</div>
-								<div
-									className={styles.rowActions}
-									onClick={(e) => {
-										e.preventDefault();
-										e.stopPropagation();
-									}}
-								>
-									{trackId && (
-										<AddToPlaylistBtn trackId={trackId} playlists={playlists} />
-									)}
-									{trackId && (
-										<LikeButton
-											compact
-											className={styles.likeBtn}
-											target={{ type: "track", trackId }}
-										/>
-									)}
-									<PlayBtn
-										track={{
-											id: trackId,
-											url: track.url,
-											title: track.title || "-",
-											artist: track.artist || "",
-											cover: track.cover,
-											yandexUrl:
-												yandexHref !== track.url ? yandexHref : undefined,
-										}}
-									/>
-								</div>
-							</TrackLink>
-						);
-					})}
-				</div>
-			</div>
-		</div>
+		<SearchInput
+			wrapperClassName={styles.searchWrap}
+			size="lg"
+			iconSize={16}
+			radius="pill"
+			placeholder="Search by title, artist or ID..."
+			value={value}
+			onChange={(e) => onChange(e.target.value)}
+			onClear={() => onChange("")}
+			spellCheck={false}
+		/>
 	);
 }
 
@@ -615,12 +416,11 @@ function Skeleton() {
 }
 
 export default function FckCensorTabs() {
-	const [tab, setTab] = useState<TabId>(() => getTabFromHash());
 	const [query, setQuery] = useState("");
 	const [playlists, setPlaylists] = useState<Playlist[]>([]);
 	const { user } = useAuth();
 
-	const { official, legacy, loaded } = useSyncExternalStore(
+	const { legacy, loaded } = useSyncExternalStore(
 		subscribeStore,
 		getStoreSnapshot,
 		getServerSnapshot,
@@ -639,70 +439,13 @@ export default function FckCensorTabs() {
 		getPlaylists(user.id).then(setPlaylists);
 	}, [user?.id]);
 
-	useEffect(() => {
-		if (!window.location.hash) {
-			history.replaceState(null, "", TAB_HASHES[tab]);
-		}
-		const onHashChange = () => {
-			setTab(getTabFromHash());
-			setQuery("");
-		};
-		window.addEventListener("hashchange", onHashChange);
-		return () => window.removeEventListener("hashchange", onHashChange);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
-
-	const handleTabChange = (t: TabId) => {
-		setTab(t);
-		setQuery("");
-		history.replaceState(null, "", TAB_HASHES[t]);
-	};
-
 	return (
 		<div>
-			<Tabs
-				variant="underline"
-				value={tab}
-				onChange={handleTabChange}
-				aria-label="Track list source"
-				items={[
-					{
-						value: "official" as const,
-						label: "M3U",
-						count: loading ? undefined : official.length,
-					},
-					{
-						value: "legacy" as const,
-						label: "JSON",
-						count: loading ? undefined : legacy.length,
-					},
-				]}
-			/>
-			<div className={styles.searchPanel}>
-				<SearchBar value={query} onChange={setQuery} />
-			</div>
-
-			{tab === "official" && (
-				<>
-					{loading ? (
-						<Skeleton />
-					) : (
-						<OfficialList
-							tracks={official}
-							query={query}
-							playlists={playlists}
-						/>
-					)}
-				</>
-			)}
-			{tab === "legacy" && (
-				<>
-					{loading ? (
-						<Skeleton />
-					) : (
-						<LegacyList tracks={legacy} query={query} playlists={playlists} />
-					)}
-				</>
+			<SearchBar value={query} onChange={setQuery} />
+			{loading ? (
+				<Skeleton />
+			) : (
+				<LegacyList tracks={legacy} query={query} playlists={playlists} />
 			)}
 		</div>
 	);

@@ -5,8 +5,9 @@ import Link from "next/link";
 import styles from "./Header.module.scss";
 import { useRouter, usePathname } from "next/navigation";
 import AuthButton from "@/components/common/AuthButton";
-import Menu from "@/components/ui/Menu";
-import menuStyles from "@/components/ui/Menu.module.scss";
+import Dropdown from "@/components/ui/Dropdown";
+import dropdownStyles from "@/components/ui/Dropdown.module.scss";
+import { useClickOutside } from "@/lib/useClickOutside";
 
 const JUNE = 5;
 
@@ -53,7 +54,7 @@ export default function Header({
 	const [useCondemnedLogo, setUseCondemnedLogo] = useState(
 		() => seasonalLogoDecided,
 	);
-	const burgerRef = useRef<HTMLButtonElement>(null);
+	const burgerWrapRef = useRef<HTMLDivElement>(null);
 	const router = useRouter();
 
 	useEffect(() => {
@@ -68,6 +69,8 @@ export default function Header({
 	}, []);
 
 	const closeMenu = () => setOpen(false);
+
+	useClickOutside(burgerWrapRef, open, closeMenu);
 
 	return (
 		<>
@@ -124,9 +127,8 @@ export default function Header({
 							</div>
 						)}
 
-						<div className={styles.burger}>
+						<div className={styles.burger} ref={burgerWrapRef}>
 							<button
-								ref={burgerRef}
 								className={styles.burgerBtn}
 								onClick={() => setOpen((v) => !v)}
 								aria-label="Toggle navigation menu"
@@ -141,25 +143,18 @@ export default function Header({
 								</span>
 							</button>
 
-							<Menu
-								open={open}
-								onClose={closeMenu}
-								anchorRef={burgerRef}
-								align="end"
-								offset={10}
-								minWidth={180}
-							>
+							<Dropdown open={open} align="end">
 								{NAV_LINKS.map((l) => (
 									<Link
 										key={l.href}
 										href={l.href}
-										className={menuStyles.item}
+										className={dropdownStyles.item}
 										onClick={closeMenu}
 									>
 										{l.label}
 									</Link>
 								))}
-							</Menu>
+							</Dropdown>
 						</div>
 					</div>
 				</div>

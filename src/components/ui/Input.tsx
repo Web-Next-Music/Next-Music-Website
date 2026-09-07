@@ -4,7 +4,7 @@ import type { InputHTMLAttributes, ReactNode, Ref } from "react";
 import { cx } from "@/lib/cx";
 import styles from "./Input.module.scss";
 
-export type InputSize = "sm" | "md";
+export type InputSize = "sm" | "md" | "lg";
 export type InputRadius = "sm" | "lg" | "pill";
 
 export interface InputProps extends Omit<

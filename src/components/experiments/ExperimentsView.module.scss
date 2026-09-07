@@ -56,7 +56,7 @@
 	font-family: var(--font-base);
 	font-size: 0.62rem;
 	padding: 3px 9px;
-	border-radius: 20px;
+	border-radius: var(--radius-3xl);
 	background: var(--accent-surface);
 	border: 1px solid var(--accent-border);
 	color: var(--accent);
@@ -198,7 +198,7 @@
 	color: var(--text);
 	background: var(--surface);
 	border: 1px solid var(--border);
-	border-radius: 8px;
+	border-radius: var(--radius-sm);
 	padding: 0 12px;
 	cursor: pointer;
 	overflow: hidden;

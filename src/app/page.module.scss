@@ -2,30 +2,22 @@
 	position: relative;
 	overflow: hidden;
 
-	&::before {
-		content: "";
-		position: absolute;
-		inset: -20px;
-		background: url("/banner.webp") center / cover no-repeat;
-		filter: blur(10px);
-		z-index: 0;
-	}
-
 	&::after {
 		content: "";
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(
-			to top,
-			var(--surface) 0%,
-			var(--banner-dim) 80%,
-			var(--bg) 100%
-		);
 		z-index: 1;
+		pointer-events: none;
 	}
 
 	> * {
 		position: relative;
 		z-index: 2;
 	}
+}
+
+.main .heroBg {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
 }

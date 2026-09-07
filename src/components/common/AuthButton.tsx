@@ -7,8 +7,9 @@ import { useAuth } from "@/lib/auth";
 import { syncGithubStar } from "@/lib/supabase/publicProfile";
 import { checkDDetectorAccess } from "@/lib/track/ddetector";
 import { cx } from "@/lib/cx";
-import Menu from "@/components/ui/Menu";
-import menuStyles from "@/components/ui/Menu.module.scss";
+import Dropdown from "@/components/ui/Dropdown";
+import dropdownStyles from "@/components/ui/Dropdown.module.scss";
+import { useClickOutside } from "@/lib/useClickOutside";
 import styles from "./AuthButton.module.scss";
 
 const starredCache = new Map<string, boolean>();
@@ -25,7 +26,10 @@ export default function AuthButton() {
 		user?.id ? (ddetectorCache.get(user.id) ?? false) : false,
 	);
 	const anchorRef = useRef<HTMLButtonElement>(null);
+	const wrapRef = useRef<HTMLDivElement>(null);
 	const closeDropdown = useCallback(() => setDropdownOpen(false), []);
+
+	useClickOutside(wrapRef, dropdownOpen, closeDropdown);
 
 	useEffect(() => {
 		if (!user) return;
@@ -67,7 +71,7 @@ export default function AuthButton() {
 		"?")[0].toUpperCase();
 
 	return (
-		<div className={styles.wrap}>
+		<div className={styles.wrap} ref={wrapRef}>
 			<button
 				ref={anchorRef}
 				className={cx(
@@ -92,21 +96,13 @@ export default function AuthButton() {
 				</span>
 			)}
 
-			<Menu
-				open={dropdownOpen}
-				onClose={closeDropdown}
-				anchorRef={anchorRef}
-				align="end"
-				offset={10}
-				minWidth={200}
-				className={styles.dropdown}
-			>
-				<p className={styles.email}>
+			<Dropdown open={dropdownOpen} align="end">
+				<p className={dropdownStyles.header}>
 					{user.user_metadata?.user_name ?? user.email}
 				</p>
 				<Link
 					href={`/profile/${user.id}`}
-					className={menuStyles.item}
+					className={dropdownStyles.item}
 					onClick={(e) => {
 						setDropdownOpen(false);
 						if (
@@ -140,7 +136,7 @@ export default function AuthButton() {
 				{isDDetector && (
 					<Link
 						href="/ddetector"
-						className={menuStyles.item}
+						className={dropdownStyles.item}
 						onClick={closeDropdown}
 					>
 						<svg
@@ -162,7 +158,7 @@ export default function AuthButton() {
 				)}
 				<button
 					type="button"
-					className={cx(menuStyles.item, menuStyles.danger)}
+					className={cx(dropdownStyles.item, dropdownStyles.danger)}
 					onClick={async () => {
 						setDropdownOpen(false);
 						await signOut();
@@ -195,7 +191,7 @@ export default function AuthButton() {
 					</svg>
 					Sign Out
 				</button>
-			</Menu>
+			</Dropdown>
 		</div>
 	);
 }

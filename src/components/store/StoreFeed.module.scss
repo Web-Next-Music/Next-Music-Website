@@ -23,7 +23,7 @@
 
 	::-webkit-scrollbar-thumb {
 		background: var(--border);
-		border-radius: 99px;
+		border-radius: var(--radius-pill);
 
 		&:hover {
 			background: var(--accent-border);
@@ -88,7 +88,7 @@
 	font-family: var(--font-base);
 	font-size: 0.56rem;
 	padding: 2px 7px;
-	border-radius: 20px;
+	border-radius: var(--radius-3xl);
 	border: 1px solid var(--border);
 	letter-spacing: 0.04em;
 	font-weight: 700;
@@ -172,7 +172,7 @@
 	grid-column: 1 / -1;
 	background: var(--danger-surface);
 	border: 1px solid var(--danger-border);
-	border-radius: 10px;
+	border-radius: var(--radius-md);
 	padding: 20px 24px;
 	font-family: var(--font-base);
 	font-size: 0.72rem;
@@ -183,7 +183,7 @@
 	margin-top: 8px;
 	background: none;
 	border: 1px solid var(--danger-border-strong);
-	border-radius: 6px;
+	border-radius: var(--radius-xs);
 	padding: 4px 10px;
 	color: var(--danger);
 	cursor: pointer;
@@ -199,7 +199,7 @@
 .card {
 	background: var(--surface);
 	border: 1px solid var(--border);
-	border-radius: 14px;
+	border-radius: var(--radius-xl);
 	padding: 16px;
 	display: flex;
 	flex-direction: column;
@@ -224,7 +224,7 @@
 .cardLogo {
 	width: 44px;
 	height: 44px;
-	border-radius: 9px;
+	border-radius: var(--radius-sm);
 	object-fit: cover;
 	border: 1px solid var(--border);
 	flex-shrink: 0;
@@ -233,7 +233,7 @@
 .logoPh {
 	width: 44px;
 	height: 44px;
-	border-radius: 9px;
+	border-radius: var(--radius-sm);
 	flex-shrink: 0;
 	background: var(--surface2);
 	display: flex;
@@ -298,7 +298,7 @@
 	align-items: center;
 	gap: 6px;
 	padding: 7px 14px;
-	border-radius: 100px;
+	border-radius: var(--radius-pill);
 	font-family: var(--font-heading-large);
 	font-size: 14px;
 	font-weight: 700;
@@ -414,14 +414,14 @@
 	.logoPh {
 		width: 72px;
 		height: 72px;
-		border-radius: 14px;
+		border-radius: var(--radius-xl);
 	}
 }
 
 .extPageLogo {
 	width: 72px;
 	height: 72px;
-	border-radius: 14px;
+	border-radius: var(--radius-xl);
 	object-fit: cover;
 	border: 1px solid var(--border);
 	flex-shrink: 0;
@@ -470,7 +470,7 @@
 .userjsBlock {
 	background: var(--bg);
 	border: 1px solid var(--border);
-	border-radius: 12px;
+	border-radius: var(--radius-lg);
 	overflow: hidden;
 	margin-bottom: 24px;
 }
@@ -496,7 +496,7 @@
 	font-weight: 700;
 	letter-spacing: 0.08em;
 	padding: 2px 7px;
-	border-radius: 20px;
+	border-radius: var(--radius-3xl);
 	background: var(--accent-mark-bg);
 	color: var(--accent);
 	border: 1px solid var(--accent-border);
@@ -519,7 +519,7 @@
 .readmeSectionBody {
 	background: var(--surface);
 	border: 1px solid var(--border);
-	border-radius: 12px;
+	border-radius: var(--radius-lg);
 	padding: 24px;
 }
 
@@ -587,7 +587,7 @@
 		background: var(--accent-mark-bg);
 		color: var(--accent);
 		padding: 1px 6px;
-		border-radius: 4px;
+		border-radius: var(--radius-2xs);
 		font-family: var(--font-base);
 		font-size: 0.82em;
 		border: 1px solid var(--accent-surface-hover);
@@ -597,7 +597,7 @@
 .mdPre {
 	background: var(--bg);
 	border: 1px solid var(--border);
-	border-radius: 10px;
+	border-radius: var(--radius-md);
 	padding: 14px 16px;
 	overflow-x: auto;
 	margin: 0.2em 0;
@@ -636,7 +636,7 @@
 	border-left: 3px solid var(--accent);
 	padding: 6px 14px;
 	background: var(--accent-bg-hover);
-	border-radius: 0 8px 8px 0;
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 
 	p {
 		color: var(--muted, #aaa);
@@ -645,7 +645,7 @@
 }
 
 .mdCallout {
-	border-radius: 10px;
+	border-radius: var(--radius-md);
 	padding: 12px 16px;
 	border: 1px solid;
 	display: flex;
@@ -733,12 +733,12 @@
 .mdImg {
 	max-width: 100%;
 	height: auto;
-	border-radius: 6px;
+	border-radius: var(--radius-xs);
 	vertical-align: middle;
 }
 
 .mdHtmlImg {
-	border-radius: 6px;
+	border-radius: var(--radius-xs);
 	vertical-align: middle;
 	max-width: 100%;
 	height: auto;
@@ -753,7 +753,7 @@
 .mdImgBlock {
 	max-width: 100%;
 	height: auto;
-	border-radius: 10px;
+	border-radius: var(--radius-md);
 	border: 1px solid var(--border);
 	display: inline-block;
 }
@@ -771,13 +771,13 @@
 	width: auto;
 	display: inline-block;
 	vertical-align: middle;
-	border-radius: 4px;
+	border-radius: var(--radius-2xs);
 }
 
 .mdDonateLink {
 	display: inline-block;
 	margin: 0.3em 0;
-	border-radius: 10px;
+	border-radius: var(--radius-md);
 	overflow: hidden;
 	transition:
 		opacity 0.15s,
@@ -794,7 +794,7 @@
 	display: block;
 	max-width: 300px;
 	height: auto;
-	border-radius: 10px;
+	border-radius: var(--radius-md);
 }
 
 .mdHtmlBlock {
@@ -804,7 +804,7 @@
 .mdTableWrap {
 	overflow-x: auto;
 	margin: 0.4em 0;
-	border-radius: 10px;
+	border-radius: var(--radius-md);
 	border: 1px solid var(--border);
 }
 
@@ -856,7 +856,7 @@
 	align-items: center;
 	gap: 12px;
 	padding: 14px 16px;
-	border-radius: 10px;
+	border-radius: var(--radius-md);
 	border: 1px solid var(--border);
 	background: var(--surface2);
 	text-decoration: none;
@@ -874,7 +874,7 @@
 .dlOptionIcon {
 	width: 32px;
 	height: 32px;
-	border-radius: 8px;
+	border-radius: var(--radius-sm);
 	background: var(--accent-mark-bg);
 	border: 1px solid var(--accent-border);
 	display: flex;
@@ -906,7 +906,7 @@
 	font-size: 11px;
 	font-weight: 700;
 	padding: 2px 8px;
-	border-radius: 20px;
+	border-radius: var(--radius-3xl);
 	background: var(--surface);
 	border: 1px solid var(--border);
 	color: var(--muted);
@@ -926,7 +926,7 @@
 	height: 14px;
 	border: 2px solid var(--accent-border);
 	border-top-color: var(--accent);
-	border-radius: 50%;
+	border-radius: var(--radius-full);
 	animation: nm-spin 0.7s linear infinite;
 }
 
@@ -974,7 +974,7 @@
 	code {
 		background: var(--surface2, rgba(255, 255, 255, 0.06));
 		border: 1px solid var(--border);
-		border-radius: 4px;
+		border-radius: var(--radius-2xs);
 		padding: 1px 6px;
 		font-family: var(--font-space-mono), monospace;
 		font-size: 0.85em;
@@ -995,7 +995,7 @@
 	align-items: center;
 	gap: 1rem;
 	padding: 3rem 2rem;
-	border-radius: 16px;
+	border-radius: var(--radius-2xl);
 	background: var(--surface, rgba(255, 255, 255, 0.03));
 	border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
 

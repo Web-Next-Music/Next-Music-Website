@@ -1,6 +1,6 @@
 import type { ReactNode, RefObject } from "react";
 import type { NowPlaying } from "./player";
-import type { OfficialTrack, LegacyTrack } from "./track";
+import type { LegacyTrack } from "./track";
 import type { Playlist } from "@/lib/supabase/playlists";
 
 export interface CardShellProps {
@@ -35,21 +35,10 @@ export interface SearchBarProps {
 	onChange: (v: string) => void;
 }
 
-export interface OfficialListProps {
-	tracks: OfficialTrack[];
-	query: string;
-	playlists: Playlist[];
-}
-
 export interface LegacyListProps {
 	tracks: LegacyTrack[];
 	query: string;
 	playlists: Playlist[];
-}
-
-export interface DownloadTabProps {
-	type: "json" | "m3u";
-	url: string;
 }
 
 export interface PlayerContextValue {

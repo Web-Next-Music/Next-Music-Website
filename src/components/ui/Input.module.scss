@@ -43,12 +43,26 @@
 	font-size: var(--fs-sm);
 }
 
+.size-lg {
+	height: var(--control-h-lg);
+	padding: 0 var(--space-4);
+	font-size: var(--fs-md);
+
+	&.hasLeft {
+		padding-left: 40px;
+	}
+
+	&.hasRight {
+		padding-right: 40px;
+	}
+}
+
 .radius-sm {
 	border-radius: var(--radius-sm);
 }
 
 .radius-lg {
-	border-radius: var(--radius-xl);
+	border-radius: var(--radius-2xl);
 }
 
 .radius-pill {

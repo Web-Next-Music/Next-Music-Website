@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import type { NowPlaying } from "@/types/player";
 import { encodeTrackKey } from "@/lib/track/trackKey";
 
@@ -10,6 +10,38 @@ function base64url(str: string): string {
 }
 
 const RESYNC_MS = 3000;
+const RPC_STORAGE_KEY = "nm-desktop-rpc";
+const RPC_EVENT = "nm-desktop-rpc-change";
+
+export function isDesktopRpcEnabled(): boolean {
+	try {
+		return localStorage.getItem(RPC_STORAGE_KEY) === "1";
+	} catch {
+		return false;
+	}
+}
+
+export function setDesktopRpcEnabled(on: boolean): void {
+	try {
+		localStorage.setItem(RPC_STORAGE_KEY, on ? "1" : "0");
+	} catch {
+		/* ignore */
+	}
+	window.dispatchEvent(new Event(RPC_EVENT));
+}
+
+function subscribeRpc(cb: () => void): () => void {
+	window.addEventListener(RPC_EVENT, cb);
+	window.addEventListener("storage", cb);
+	return () => {
+		window.removeEventListener(RPC_EVENT, cb);
+		window.removeEventListener("storage", cb);
+	};
+}
+
+export function useDesktopRpcEnabled(): boolean {
+	return useSyncExternalStore(subscribeRpc, isDesktopRpcEnabled, () => false);
+}
 
 function pushRpc(payload: object) {
 	try {
@@ -29,6 +61,7 @@ export function useRichPresenceWS(
 	isPlaying: boolean,
 	audioRef: React.RefObject<HTMLAudioElement | null>,
 ) {
+	const enabled = useDesktopRpcEnabled();
 	const nowPlayingRef = useRef(nowPlaying);
 	const isPlayingRef = useRef(isPlaying);
 	const lastSentRef = useRef<string | null>(null);
@@ -80,6 +113,7 @@ export function useRichPresenceWS(
 
 	const send = useCallback(
 		(state: "playing" | "paused" | "stopped", force = false) => {
+			if (!isDesktopRpcEnabled()) return;
 			const payload = buildPayload(state);
 			const key = `${payload.playerState}|${payload.trackId}|${payload.title}`;
 			if (!force && key === lastSentRef.current) return;
@@ -104,6 +138,10 @@ export function useRichPresenceWS(
 	}, [send, stopTick]);
 
 	useEffect(() => {
+		if (!enabled) {
+			stopTick();
+			return;
+		}
 		const audio = audioRef.current;
 		stopTick();
 
@@ -130,9 +168,10 @@ export function useRichPresenceWS(
 			audio?.removeEventListener("durationchange", onReady);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [nowPlaying?.url]);
+	}, [nowPlaying?.url, enabled]);
 
 	useEffect(() => {
+		if (!enabled) return;
 		const audio = audioRef.current;
 		if (!audio) return;
 		const onSeeked = () => {
@@ -141,9 +180,10 @@ export function useRichPresenceWS(
 		};
 		audio.addEventListener("seeked", onSeeked);
 		return () => audio.removeEventListener("seeked", onSeeked);
-	}, [audioRef, send]);
+	}, [audioRef, send, enabled]);
 
 	useEffect(() => {
+		if (!enabled) return;
 		if (!nowPlaying) return;
 		const audio = audioRef.current;
 		if (!audio?.duration || !isFinite(audio.duration)) return;
@@ -151,7 +191,7 @@ export function useRichPresenceWS(
 		if (isPlaying) startTick();
 		else stopTick();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [isPlaying]);
+	}, [isPlaying, enabled]);
 
 	useEffect(() => {
 		return () => {

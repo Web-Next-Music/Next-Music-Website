@@ -81,7 +81,6 @@ export default function Hero() {
 			name: ".exe",
 			href: winAsset?.browser_download_url ?? release?.html_url ?? "#",
 			size: winAsset ? formatSize(winAsset.size) : null,
-			iconClass: "win",
 			btnClass: "dlBtnWin",
 		},
 		{
@@ -90,7 +89,6 @@ export default function Hero() {
 			name: ".AppImage",
 			href: appImageAsset?.browser_download_url ?? release?.html_url ?? "#",
 			size: appImageAsset ? formatSize(appImageAsset.size) : null,
-			iconClass: "appimage",
 			btnClass: "dlBtnAppimage",
 		},
 		{
@@ -99,7 +97,6 @@ export default function Hero() {
 			name: ".deb",
 			href: debAsset?.browser_download_url ?? release?.html_url ?? "#",
 			size: debAsset ? formatSize(debAsset.size) : null,
-			iconClass: "deb",
 			btnClass: "dlBtnDeb",
 		},
 		{
@@ -108,75 +105,12 @@ export default function Hero() {
 			name: ".pkg.tar.zst",
 			href: pkgAsset?.browser_download_url ?? release?.html_url ?? "#",
 			size: pkgAsset ? formatSize(pkgAsset.size) : null,
-			iconClass: "pkg",
 			btnClass: "dlBtnPkg",
 		},
 	];
 
-	const features = ["Themes", "Addons", "Discord RPC", "OBS Widget"];
-
 	return (
 		<section className={styles.hero}>
-			<div className={styles.heroLeft}>
-				<h1 className={styles.title}>
-					Next Music
-					<br />
-					<span>Client</span>
-				</h1>
-				<p className={styles.desc}>
-					Web client for Yandex Music with support for themes, addons, Discord
-					Rich Presence (RPC) and OBS widget
-				</p>
-				<div className={styles.dlSection}>
-					<span className={styles.dlSectionLabel}>Download</span>
-					<div className={styles.dlGrid}>
-						{buttons.map((btn, i) => {
-							const isDisabled = loading || !btn.href || btn.href === "#";
-
-							return (
-								<a
-									key={i}
-									href={btn.href}
-									onClick={(e) => {
-										if (isDisabled) return;
-										e.preventDefault();
-										downloadViaIframe(btn.href);
-									}}
-									className={`${styles.dlBtn} ${styles[btn.btnClass]} ${loading ? styles.dlBtnLoading : ""}`}
-								>
-									<div className={`${styles.dlIcon} ${styles[btn.iconClass]}`}>
-										{btn.icon}
-									</div>
-									<div className={styles.dlText}>
-										<span className={styles.dlLabel}>{btn.label}</span>
-										<span className={styles.dlName}>
-											{btn.name}
-											{btn.size && (
-												<span className={styles.dlSize}>{btn.size}</span>
-											)}
-										</span>
-									</div>
-									<svg
-										className={styles.dlArrow}
-										width="14"
-										height="14"
-										viewBox="0 0 24 24"
-										fill="none"
-									>
-										<path
-											d="M12 4v12m0 0-4-4m4 4 4-4M4 20h16"
-											stroke="currentColor"
-											strokeWidth="1.8"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										/>
-									</svg>
-								</a>
-							);
-						})}
-					</div>
-				</div>
-			</div>
 			<div className={styles.heroRight}>
 				<div className={styles.previewWrapper}>
 					<Image
@@ -187,6 +121,40 @@ export default function Hero() {
 						className={styles.previewImg}
 						priority
 					/>
+				</div>
+			</div>
+			<div className={styles.dlSection}>
+				<span className={styles.dlSectionLabel}>
+					Download for your platform
+				</span>
+				<div className={styles.dlGrid}>
+					{buttons.map((btn, i) => {
+						const isDisabled = loading || !btn.href || btn.href === "#";
+
+						return (
+							<a
+								key={i}
+								href={btn.href}
+								onClick={(e) => {
+									if (isDisabled) return;
+									e.preventDefault();
+									downloadViaIframe(btn.href);
+								}}
+								className={`${styles.dlBtn} ${styles[btn.btnClass]} ${loading ? styles.dlBtnLoading : ""}`}
+							>
+								<div className={styles.dlIcon}>{btn.icon}</div>
+								<div className={styles.dlText}>
+									<span className={styles.dlLabel}>{btn.label}</span>
+									<span className={styles.dlName}>
+										{btn.name}
+										{btn.size && (
+											<span className={styles.dlSize}>{btn.size}</span>
+										)}
+									</span>
+								</div>
+							</a>
+						);
+					})}
 				</div>
 			</div>
 		</section>

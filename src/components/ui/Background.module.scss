@@ -1,0 +1,82 @@
+.root {
+	position: relative;
+	opacity: var(--bg-opacity, 1);
+}
+
+.layers {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+.fade-down {
+	mask-image: linear-gradient(
+		to bottom,
+		#000 var(--bg-fade-start, 0%),
+		transparent var(--bg-fade-end, 100%)
+	);
+}
+
+.fade-up {
+	mask-image: linear-gradient(
+		to top,
+		#000 var(--bg-fade-start, 0%),
+		transparent var(--bg-fade-end, 100%)
+	);
+}
+
+.layer {
+	position: absolute;
+	inset: 0;
+	opacity: var(--bg-layer-opacity, 1);
+	background-position: center;
+}
+
+.grid {
+	background-image:
+		linear-gradient(to right, var(--bg-color) 1px, transparent 1px),
+		linear-gradient(to bottom, var(--bg-color) 1px, transparent 1px);
+	background-size: var(--bg-size) var(--bg-size);
+}
+
+.dots {
+	background-image: radial-gradient(
+		circle,
+		var(--bg-color) 1px,
+		transparent 1px
+	);
+	background-size: var(--bg-size) var(--bg-size);
+}
+
+.lines {
+	background-image: repeating-linear-gradient(
+		var(--bg-angle),
+		var(--bg-color) 0,
+		var(--bg-color) 1px,
+		transparent 1px,
+		transparent var(--bg-size)
+	);
+}
+
+.cross {
+	background-image:
+		linear-gradient(to right, var(--bg-color) 1px, transparent 1px),
+		linear-gradient(to bottom, var(--bg-color) 1px, transparent 1px);
+	background-size: var(--bg-size) var(--bg-size);
+	mask-image:
+		linear-gradient(to right, #000 8px, transparent 8px),
+		linear-gradient(to bottom, #000 8px, transparent 8px);
+	mask-size: var(--bg-size) var(--bg-size);
+	mask-position: center;
+}
+
+.checker {
+	background-image: conic-gradient(
+		var(--bg-color) 0deg 90deg,
+		transparent 90deg 180deg,
+		var(--bg-color) 180deg 270deg,
+		transparent 270deg 360deg
+	);
+	background-size: var(--bg-size) var(--bg-size);
+}

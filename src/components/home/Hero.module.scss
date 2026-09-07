@@ -1,20 +1,13 @@
 @use "../../styles/breakpoints" as bp;
 
 .hero {
-	display: grid;
-	grid-template-columns: 1fr 1.2fr;
-	min-height: 80vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 	max-width: 1200px;
 	margin: 0 auto;
 	padding: 60px 50px;
-	align-items: center;
-	gap: 60px;
-}
-
-.heroLeft {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
+	gap: 20px;
 }
 
 .title {
@@ -55,7 +48,7 @@
 	color: var(--muted);
 	background: var(--surface);
 	border: 1px solid var(--border);
-	border-radius: 99px;
+	border-radius: var(--radius-pill);
 	padding: 4px 12px;
 	letter-spacing: 0.2px;
 }
@@ -63,21 +56,40 @@
 .dlSection {
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
+	align-items: center;
+	gap: 14px;
+	width: 100%;
+	max-width: 640px;
 }
 
 .dlSectionLabel {
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 800;
-	letter-spacing: 0.8px;
+	letter-spacing: 0.6px;
 	text-transform: uppercase;
 	color: var(--muted);
+	position: relative;
+	padding-bottom: 12px;
+
+	&::after {
+		content: "";
+		position: absolute;
+		bottom: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 32px;
+		height: 2px;
+		border-radius: var(--radius-pill);
+		background: var(--accent);
+		opacity: 0.6;
+	}
 }
 
 .dlGrid {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 8px;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 12px;
+	width: 100%;
 }
 
 @keyframes dlBtnIn {
@@ -92,20 +104,36 @@
 }
 
 .dlBtn {
+	--accent-c: var(--accent);
+	position: relative;
 	display: flex;
+	flex-direction: column;
 	align-items: center;
-	gap: 10px;
+	text-align: center;
+	gap: 12px;
 	background: var(--surface);
 	border: 1px solid var(--border);
-	border-radius: 14px;
-	padding: 12px 14px;
+	border-radius: var(--radius-xl);
+	padding: 26px 14px 20px;
 	cursor: pointer;
-	transition:
-		background 0.25s ease,
-		border-color 0.25s ease;
+	overflow: hidden;
+	min-width: 0;
+	transition: border-color 0.25s ease;
 	text-decoration: none;
 	color: inherit;
 	animation: dlBtnIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+	&::before {
+		content: "";
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 3px;
+		background: var(--accent-c);
+		opacity: 0.7;
+		transition: opacity 0.25s ease;
+	}
 
 	&:nth-child(1) {
 		animation-delay: 0.05s;
@@ -120,33 +148,8 @@
 		animation-delay: 0.2s;
 	}
 
-	&:hover .dlArrow {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-.dlBtnWin,
-.dlBtnAppimage,
-.dlBtnDeb,
-.dlBtnPkg {
-	position: relative;
-	overflow: hidden;
-
-	&::before {
-		content: "";
-		position: absolute;
-		inset: 0;
-		z-index: 0;
-		opacity: 0;
-		transition: opacity 0.3s ease;
-		pointer-events: none;
-		border-radius: inherit;
-	}
-
-	& > * {
-		position: relative;
-		z-index: 1;
+	&:hover {
+		border-color: var(--accent-c);
 	}
 
 	&:hover::before {
@@ -155,106 +158,88 @@
 }
 
 .dlBtnWin {
-	&::before {
-		background: linear-gradient(135deg, #0174cf22 0%, var(--surface) 100%);
-	}
-	&:hover {
-		border-color: #0174cf44;
-	}
+	--accent-c: #0d8bff;
 }
 .dlBtnAppimage {
-	&::before {
-		background: linear-gradient(135deg, #739fb922 0%, var(--surface) 100%);
-	}
-	&:hover {
-		border-color: #739fb944;
-	}
+	--accent-c: #8ec2e0;
 }
 .dlBtnDeb {
-	&::before {
-		background: linear-gradient(135deg, #a81d3322 0%, var(--surface) 100%);
-	}
-	&:hover {
-		border-color: #a81d3344;
-	}
+	--accent-c: #d4374f;
 }
 .dlBtnPkg {
-	&::before {
-		background: linear-gradient(135deg, #1793d122 0%, var(--surface) 100%);
-	}
-	&:hover {
-		border-color: #1793d144;
-	}
+	--accent-c: #22a5e8;
 }
 
 .dlIcon {
-	width: 30px;
-	height: 30px;
-	border-radius: 7px;
+	width: 52px;
+	height: 52px;
+	border-radius: var(--radius-md);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-}
+	background: color-mix(in srgb, var(--accent-c) 16%, transparent);
 
-.win {
-	background: #0174cf22;
-}
-.appimage {
-	background: #739fb922;
-}
-.deb {
-	background: #a81d3322;
-}
-.pkg {
-	background: #1793d122;
+	img {
+		width: 25px;
+		height: 25px;
+	}
 }
 
 .dlText {
 	display: flex;
 	flex-direction: column;
-	gap: 1px;
+	align-items: center;
+	gap: 5px;
 	min-width: 0;
-	flex: 1;
+	max-width: 100%;
 }
 
 .dlLabel {
-	font-size: 12px;
-	color: var(--muted);
-	font-weight: 700;
+	font-size: 15px;
+	color: inherit;
+	font-weight: 800;
+	white-space: nowrap;
 }
 
 .dlName {
-	font-size: 13px;
+	display: inline-flex;
+	align-items: center;
+	max-width: 100%;
+	font-size: 10px;
 	font-weight: 700;
+	color: var(--muted);
+	background: var(--surface2, rgba(255, 255, 255, 0.05));
+	border: 1px solid var(--border);
+	border-radius: var(--radius-pill);
+	padding: 3px 8px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .dlSize {
-	font-size: 10px;
+	font-size: 9px;
 	font-family: var(--font-base);
 	color: var(--muted);
 	font-weight: 800;
 	margin-left: 5px;
-}
-
-.dlArrow {
-	color: var(--muted);
+	padding-left: 5px;
+	border-left: 1px solid var(--border);
 	flex-shrink: 0;
-	opacity: 0;
-	transform: translateY(-2px);
-	transition: all 0.18s;
 }
 
 .heroRight {
 	display: flex;
-	justify-content: flex-end;
+	justify-content: center;
 	align-items: center;
+	width: 100%;
 }
 
 .previewWrapper {
 	position: relative;
 	width: 100%;
-	max-width: 580px;
+	max-width: 640px;
 }
 
 .previewImg {
@@ -267,25 +252,7 @@
 
 @include bp.tablet-lg {
 	.hero {
-		grid-template-columns: 1fr;
 		padding: 48px 20px;
-		min-height: unset;
-	}
-
-	.previewImg {
-		display: none;
-	}
-
-	.heroRight {
-		justify-content: center;
-	}
-
-	.previewWrapper {
-		max-width: 100%;
-	}
-
-	.title {
-		font-size: 38px;
 	}
 
 	.dlGrid {
@@ -295,10 +262,25 @@
 
 @include bp.xs {
 	.dlGrid {
-		grid-template-columns: 1fr;
+		grid-template-columns: 1fr 1fr;
+		gap: 8px;
 	}
 
-	.heroRight {
-		display: none;
+	.dlBtn {
+		padding: 18px 8px 14px;
+	}
+
+	.dlIcon {
+		width: 40px;
+		height: 40px;
+	}
+
+	.dlIcon img {
+		width: 20px;
+		height: 20px;
+	}
+
+	.dlLabel {
+		font-size: 12px;
 	}
 }

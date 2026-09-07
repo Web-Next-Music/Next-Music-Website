@@ -11,7 +11,7 @@
 .card {
 	background: var(--surface);
 	border: 1px solid var(--border);
-	border-radius: 14px;
+	border-radius: var(--radius-xl);
 	overflow: hidden;
 	animation: slideIn 0.4s ease both;
 	animation-delay: var(--delay, 0s);
@@ -72,7 +72,7 @@
 .dot {
 	width: 7px;
 	height: 7px;
-	border-radius: 50%;
+	border-radius: var(--radius-full);
 	flex-shrink: 0;
 }
 
@@ -105,7 +105,7 @@
 .cover {
 	width: 56px;
 	height: 56px;
-	border-radius: 8px;
+	border-radius: var(--radius-sm);
 	object-fit: cover;
 	flex-shrink: 0;
 	border: 1px solid var(--border);
@@ -114,7 +114,7 @@
 .coverPlaceholder {
 	width: 56px;
 	height: 56px;
-	border-radius: 8px;
+	border-radius: var(--radius-sm);
 	background: var(--surface2);
 	border: 1px solid var(--border);
 	display: flex;
@@ -159,13 +159,13 @@
 	flex: 1;
 	height: 3px;
 	background: var(--border);
-	border-radius: 2px;
+	border-radius: var(--radius-3xs);
 	overflow: hidden;
 }
 
 .progressFill {
 	height: 100%;
 	background: linear-gradient(90deg, var(--accent2), var(--accent));
-	border-radius: 2px;
+	border-radius: var(--radius-3xs);
 	transition: width 0.8s linear;
 }

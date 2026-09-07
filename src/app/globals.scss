@@ -27,12 +27,15 @@ textarea,
 	--mini-player-h: 0px;
 
 	/* Radii */
+	--radius-3xs: 2px;
+	--radius-2xs: 4px;
 	--radius-xs: 6px;
 	--radius-sm: 8px;
 	--radius-md: 10px;
 	--radius-lg: 12px;
-	--radius-xl: 16px;
-	--radius-2xl: 20px;
+	--radius-xl: 14px;
+	--radius-2xl: 16px;
+	--radius-3xl: 20px;
 	--radius-pill: 999px;
 	--radius-full: 50%;
 
@@ -109,7 +112,6 @@ textarea,
 }
 
 @mixin light-vars {
-	--banner-dim: rgba(255, 255, 255, 0.6);
 	--bg: #f9f9f9;
 	--header: #f3f3f4d9;
 	--surface: #fdfdfe;
@@ -157,7 +159,6 @@ textarea,
 }
 
 @mixin dark-vars {
-	--banner-dim: rgba(0, 0, 0, 0.9);
 	--bg: #000000;
 	--header: #000000d9;
 	--surface: #0c0c0e;

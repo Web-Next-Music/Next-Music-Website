@@ -45,7 +45,7 @@
 
 .card {
 	background: var(--bg);
-	border-radius: 16px;
+	border-radius: var(--radius-2xl);
 	height: 108px;
 	padding: 15px;
 	display: flex;
@@ -65,7 +65,7 @@
 .avatarImg {
 	width: 44px;
 	height: 44px;
-	border-radius: 50%;
+	border-radius: var(--radius-full);
 	object-fit: cover;
 	flex-shrink: 0;
 	border: 1px solid var(--border);
@@ -94,7 +94,7 @@
 	background-color: var(--bg);
 	border: 1px solid var(--border);
 	padding: 10px;
-	border-radius: 100px;
+	border-radius: var(--radius-pill);
 	align-items: center;
 	justify-content: center;
 	gap: 6px;
@@ -105,7 +105,7 @@
 	width: 34px;
 	height: 34px;
 	padding: 0;
-	border-radius: 50%;
+	border-radius: var(--radius-full);
 	display: flex;
 	align-items: center;
 	justify-content: center;

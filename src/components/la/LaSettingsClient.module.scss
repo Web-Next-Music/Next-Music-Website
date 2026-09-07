@@ -17,7 +17,7 @@
 	flex-shrink: 0;
 	width: 70px;
 	height: 70px;
-	border-radius: 10px;
+	border-radius: var(--radius-md);
 	object-fit: cover;
 	border: 1px solid var(--border);
 	background: var(--surface);
@@ -39,7 +39,7 @@
 	color: var(--muted);
 	background: var(--surface);
 	border: 1px solid var(--border);
-	border-radius: 999px;
+	border-radius: var(--radius-pill);
 	padding: 6px 13px;
 	white-space: nowrap;
 	margin-top: 6px;
@@ -68,7 +68,7 @@
 	flex-direction: column;
 	background: var(--surface);
 	border: 1px solid var(--border);
-	border-radius: var(--radius-xl);
+	border-radius: var(--radius-2xl);
 	padding: var(--space-5);
 	gap: var(--space-5);
 }
@@ -79,7 +79,7 @@
 	color: var(--muted);
 	background: var(--surface2, var(--surface));
 	border: 1px solid var(--border);
-	border-radius: 12px;
+	border-radius: var(--radius-lg);
 	padding: 16px 18px;
 }
 

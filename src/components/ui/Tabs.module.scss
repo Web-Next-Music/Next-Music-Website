@@ -62,7 +62,7 @@
 	font-weight: 700;
 	background: var(--surface2);
 	border: 1px solid var(--border);
-	border-radius: var(--radius-2xl);
+	border-radius: var(--radius-3xl);
 	padding: 1px 7px;
 	color: var(--muted);
 }
@@ -83,7 +83,7 @@
 .folder .tab {
 	border-color: var(--border);
 	border-bottom: none;
-	border-radius: 9px 9px 0 0;
+	border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 	background: var(--surface2);
 
 	&::after {

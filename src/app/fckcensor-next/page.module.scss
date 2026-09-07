@@ -11,7 +11,7 @@
 	align-items: flex-start;
 	gap: 20px;
 	background: var(--surface);
-	border-radius: 16px;
+	border-radius: var(--radius-2xl);
 	padding: 20px 20px 56px 20px;
 	margin-bottom: 10px;
 	position: relative;
@@ -23,7 +23,7 @@
 .addonIcon {
 	flex-shrink: 0;
 	margin-top: 2px;
-	border-radius: 10px;
+	border-radius: var(--radius-md);
 	border: 1px solid var(--border);
 }
 
@@ -79,7 +79,7 @@
 	flex-shrink: 0;
 	background: var(--surface2);
 	border: 1px solid var(--border);
-	border-radius: 8px;
+	border-radius: var(--radius-sm);
 	padding: 10px 18px;
 	font-size: 14px;
 	font-weight: 700;
@@ -102,7 +102,7 @@
 	align-items: center;
 	gap: 5px;
 	padding: 3px 10px;
-	border-radius: 20px;
+	border-radius: var(--radius-3xl);
 	font-size: 11px;
 	font-weight: 700;
 	letter-spacing: 0.3px;
@@ -120,7 +120,7 @@
 	align-items: flex-start;
 	gap: 20px;
 	background: var(--surface);
-	border-radius: 16px;
+	border-radius: var(--radius-2xl);
 	padding: 20px;
 	margin-bottom: 20px;
 	position: relative;
@@ -131,7 +131,7 @@
 .creditsAvatar {
 	width: 48px;
 	height: 48px;
-	border-radius: 50%;
+	border-radius: var(--radius-full);
 	border: 1px solid var(--border);
 	flex-shrink: 0;
 	margin-top: 2px;

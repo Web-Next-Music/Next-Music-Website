@@ -6,12 +6,14 @@ import IconButton from "./IconButton";
 
 interface Props extends Omit<InputProps, "iconLeft" | "type"> {
 	onClear?: () => void;
+	iconSize?: number;
 }
 
 export default function SearchInput({
 	onClear,
 	value,
 	placeholder = "Search",
+	iconSize = 14,
 	...rest
 }: Props) {
 	const showClear = Boolean(onClear && value);
@@ -21,11 +23,11 @@ export default function SearchInput({
 			type="search"
 			value={value}
 			placeholder={placeholder}
-			iconLeft={<Search size={14} />}
+			iconLeft={<Search size={iconSize} />}
 			iconRight={
 				showClear ? (
 					<IconButton label="Clear" size="sm" onClick={onClear}>
-						<X size={14} />
+						<X size={iconSize} />
 					</IconButton>
 				) : undefined
 			}
