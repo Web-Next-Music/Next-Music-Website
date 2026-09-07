@@ -23,7 +23,6 @@ import {
 } from "@/lib/la/laAdmin";
 import { fetchClientTags } from "@/lib/la/laClientTags";
 import ServerLoadError from "@/components/la/ServerLoadError";
-import storeStyles from "@/components/store/StoreFeed.module.scss";
 import styles from "./LaSettingsClient.module.scss";
 
 export default function LaSettingsClient() {
@@ -212,7 +211,7 @@ export default function LaSettingsClient() {
 
 				{!missingParams && !signedOut && (
 					<div className={styles.card}>
-						{authLoading && <div className={storeStyles.skeletonCard} />}
+						{authLoading && <div className={styles.skeletonCard} />}
 
 						{!authLoading && user && !confirmed && (
 							<div className={styles.confirmBlock}>
@@ -270,7 +269,7 @@ export default function LaSettingsClient() {
 						)}
 
 						{!authLoading && user && confirmed && loadingSettings && (
-							<div className={storeStyles.skeletonCard} />
+							<div className={styles.skeletonCard} />
 						)}
 
 						{!authLoading &&

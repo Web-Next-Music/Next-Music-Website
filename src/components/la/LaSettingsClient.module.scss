@@ -189,3 +189,9 @@
 	color: var(--accent);
 	font-weight: 700;
 }
+
+.skeletonCard {
+	background: var(--surface);
+	border: 1px solid var(--border);
+	height: 180px;
+}

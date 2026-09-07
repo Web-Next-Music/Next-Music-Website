@@ -21,11 +21,11 @@ export const metadata: Metadata = {
 	metadataBase: new URL("https://nm.diram1x.ru"),
 	title: "Next Music",
 	description:
-		"Web client for Yandex Music with support for themes, addons, Discord Rich Presence (RPC) and OBS widget.",
+		"Web client for Yandex Music with support for themes, Discord Rich Presence (RPC) and OBS widget.",
 	openGraph: {
 		title: "Next Music",
 		description:
-			"Web client for Yandex Music with support for themes, addons, Discord Rich Presence (RPC) and OBS widget",
+			"Web client for Yandex Music with support for themes, Discord Rich Presence (RPC) and OBS widget",
 		images: ["/preview.png"],
 		type: "website",
 	},

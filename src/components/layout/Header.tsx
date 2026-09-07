@@ -43,7 +43,6 @@ export default function Header({
 				]
 			: [
 					{ href: "/", label: "Home" },
-					{ href: "/store", label: "Store" },
 					{ href: "/fckcensor-next", label: "FckCensor Next" },
 					{ href: "/experiments", label: "Experiments" },
 				]),
