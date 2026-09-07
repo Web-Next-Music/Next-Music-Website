@@ -16,45 +16,13 @@ import {
 } from "@/lib/supabase/playlists";
 import { decodeTrackKey } from "@/lib/track/trackKey";
 import { findTrackById } from "@/lib/track/trackStore";
-import { TRACK_META } from "@/lib/fckcensor";
-import { marked } from "marked";
 import TrackRow from "@/components/common/TrackRow";
 import styles from "./profile.module.scss";
-
-marked.use({ breaks: true, gfm: true } as Parameters<typeof marked.use>[0]);
-
-function renderBio(text: string): string {
-	return marked.parse(text) as string;
-}
-
-function formatJoinDate(iso: string, exact: boolean): string {
-	const d = new Date(iso);
-	if (exact) {
-		const dd = String(d.getDate()).padStart(2, "0");
-		const mm = String(d.getMonth() + 1).padStart(2, "0");
-		const yyyy = d.getFullYear();
-		return `${mm}/${dd}/${yyyy}`;
-	}
-	return `Joined ${d.toLocaleDateString("en-US", { month: "long", year: "numeric" })}`;
-}
-
-function resolveTrackMeta(trackId: string) {
-	const meta = TRACK_META[trackId];
-	if (meta) return meta;
-	const stored = findTrackById(trackId);
-	if (stored)
-		return { title: stored.title, artist: stored.artist, cover: stored.cover };
-	if (!trackId.startsWith("http")) {
-		const decoded = decodeTrackKey(trackId);
-		if (decoded?.title || decoded?.artist)
-			return {
-				title: decoded.title,
-				artist: decoded.artist,
-				cover: decoded.cover,
-			};
-	}
-	return null;
-}
+import {
+	renderBio,
+	formatJoinDate,
+	resolveTrackMeta,
+} from "@/lib/profile/profileHelpers";
 
 function PublicPlaylistSection({ playlist }: { playlist: Playlist }) {
 	const [open, setOpen] = useState(false);

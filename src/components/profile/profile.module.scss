@@ -49,6 +49,30 @@
 	animation: nm-pulse 1.4s ease-in-out infinite;
 }
 
+.skeletonLine72 {
+	width: 72%;
+}
+
+.skeletonLine55 {
+	width: 55%;
+}
+
+.skeletonLine64 {
+	width: 64%;
+}
+
+.statLabelGrow {
+	flex: 1;
+}
+
+.sectionSpaced {
+	margin-top: 20px;
+}
+
+.chevronInline {
+	margin-left: 4px;
+}
+
 .skeletonBlock {
 	display: block;
 	flex-shrink: 0;

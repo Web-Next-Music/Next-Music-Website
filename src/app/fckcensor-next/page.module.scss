@@ -6,7 +6,7 @@
 	padding: calc(20px + var(--mini-player-h)) 40px 30px;
 }
 
-.addonHero {
+.fckCensorHero {
 	display: flex;
 	align-items: flex-start;
 	gap: 20px;
@@ -20,19 +20,19 @@
 	border: 1px solid var(--border);
 }
 
-.addonIcon {
+.fckCensorIcon {
 	flex-shrink: 0;
 	margin-top: 2px;
 	border-radius: var(--radius-md);
 	border: 1px solid var(--border);
 }
 
-.addonInfo {
+.fckCensorInfo {
 	flex: 1;
 	min-width: 0;
 }
 
-.addonTitle {
+.fckCensorTitle {
 	font-size: 20px;
 	font-weight: 800;
 	letter-spacing: -0.5px;
@@ -40,14 +40,14 @@
 	font-family: var(--font-heading-large);
 }
 
-.addonDesc {
+.fckCensorDesc {
 	font-size: 16px;
 	color: var(--muted);
 	line-height: 1.6;
 	max-width: 700px;
 }
 
-.addonActions {
+.fckCensorActions {
 	position: absolute;
 	bottom: 16px;
 	right: 14px;
@@ -56,7 +56,7 @@
 	gap: 10px;
 }
 
-.addonVersion {
+.fckCensorVersion {
 	position: absolute;
 	bottom: 20px;
 	left: 20px;
@@ -66,12 +66,12 @@
 	color: var(--muted);
 }
 
-.addonBtnLoading {
+.fckCensorBtnLoading {
 	opacity: 0.5;
 	pointer-events: none;
 }
 
-.addonBtn {
+.fckCensorBtn {
 	display: inline-flex;
 	align-items: center;
 	width: 115px;
@@ -174,7 +174,7 @@
 		padding: calc(25px + var(--mini-player-h)) 20px 25px;
 	}
 
-	.addonHero {
+	.fckCensorHero {
 		flex-direction: row;
 		flex-wrap: wrap;
 		align-items: flex-start;
@@ -184,24 +184,24 @@
 		height: auto;
 	}
 
-	.addonIcon {
+	.fckCensorIcon {
 		margin-top: 0;
 	}
 
-	.addonInfo {
+	.fckCensorInfo {
 		flex: 1;
 		min-width: 0;
 	}
 
-	.addonTitle {
+	.fckCensorTitle {
 		font-size: 18px;
 	}
 
-	.addonDesc {
+	.fckCensorDesc {
 		font-size: 13px;
 	}
 
-	.addonVersion {
+	.fckCensorVersion {
 		display: none;
 	}
 
@@ -212,13 +212,13 @@
 		order: -1;
 	}
 
-	.addonActions {
+	.fckCensorActions {
 		position: static;
 		width: 100%;
 		justify-content: center;
 	}
 
-	.addonBtn {
+	.fckCensorBtn {
 		flex: 1;
 		justify-content: center;
 		font-size: 12px;

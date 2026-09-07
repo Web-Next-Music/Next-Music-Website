@@ -73,27 +73,27 @@ export default function FckCensorHero() {
 	}, []);
 
 	return (
-		<div className={styles.addonHero}>
+		<div className={styles.fckCensorHero}>
 			<Image
-				className={styles.addonIcon}
+				className={styles.fckCensorIcon}
 				src="https://raw.githubusercontent.com/Web-Next-Music/FckCensor-Next/refs/heads/main/src/icon.webp"
 				width={48}
 				height={48}
 				alt="addon icon"
 			/>
-			<div className={styles.addonInfo}>
-				<h1 className={styles.addonTitle}>FckCensor Next</h1>
-				<p className={styles.addonDesc}>
+			<div className={styles.fckCensorInfo}>
+				<h1 className={styles.fckCensorTitle}>FckCensor Next</h1>
+				<p className={styles.fckCensorDesc}>
 					This add-on allows bypassing censorship by replacing the MP3 file of
 					the currently playing track
 				</p>
 			</div>
-			<div className={styles.addonActions}>
+			<div className={styles.fckCensorActions}>
 				<a
 					href="https://github.com/Web-Next-Music/FckCensor-Next/"
 					target="_blank"
 					rel="noopener noreferrer"
-					className={styles.addonBtn}
+					className={styles.fckCensorBtn}
 				>
 					<GitHubIcon />
 					GitHub
@@ -102,14 +102,14 @@ export default function FckCensorHero() {
 					href={userJsUrl ?? RELEASES_URL}
 					target="_blank"
 					rel="noopener noreferrer"
-					className={`${styles.addonBtn} ${loading ? styles.addonBtnLoading : ""}`}
+					className={`${styles.fckCensorBtn} ${loading ? styles.fckCensorBtnLoading : ""}`}
 					aria-disabled={loading}
 				>
 					<ScriptIcon />
 					Install
 				</a>
 			</div>
-			{tag && <span className={styles.addonVersion}>latest: {tag}</span>}
+			{tag && <span className={styles.fckCensorVersion}>latest: {tag}</span>}
 			<span className={styles.webBadge}>Now available for web</span>
 		</div>
 	);

@@ -11,7 +11,7 @@ function SunIcon() {
 			height="11"
 			viewBox="0 0 24 24"
 			fill="none"
-			style={{ display: "block" }}
+			className={styles.svgBlock}
 		>
 			<circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.8" />
 			<path
@@ -31,7 +31,7 @@ function MoonIcon() {
 			height="11"
 			viewBox="0 1 24 24"
 			fill="none"
-			style={{ display: "block" }}
+			className={styles.svgBlock}
 		>
 			<path
 				d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"

@@ -258,18 +258,13 @@ function LegacyList({ tracks, query, playlists }: LegacyListProps) {
 			)}
 			<div
 				ref={spacerRef}
-				style={{
-					height: filtered.length * TRACK_HEIGHT,
-					position: "relative",
-				}}
+				className={styles.spacer}
+				style={{ height: filtered.length * TRACK_HEIGHT }}
 			>
 				<div
 					ref={contentRef}
+					className={styles.content}
 					style={{
-						position: "absolute",
-						top: 0,
-						left: 0,
-						right: 0,
 						transform: `translateY(${renderRange.start * TRACK_HEIGHT}px)`,
 					}}
 				>
@@ -306,7 +301,7 @@ function LegacyList({ tracks, query, playlists }: LegacyListProps) {
 										{meta?.artist ? (
 											<Highlight text={meta.artist} query={query} />
 										) : (
-											<span style={{ opacity: 0.45 }}>ID: {track.id}</span>
+											<span className={styles.idFallback}>ID: {track.id}</span>
 										)}
 									</div>
 								</div>
@@ -385,7 +380,7 @@ function Skeleton() {
 	return (
 		<div className={styles.list}>
 			{Array.from({ length: 8 }).map((_, i) => (
-				<div key={i} className={styles.trackRow} style={{ opacity: 0.4 }}>
+				<div key={i} className={`${styles.trackRow} ${styles.skeletonRow}`}>
 					<span className={styles.num}>{i + 1}</span>
 					<div className={styles.coverPlaceholder} />
 					<div className={styles.info}>
@@ -399,13 +394,12 @@ function Skeleton() {
 							}}
 						/>
 						<div
-							className={styles.artist}
+							className={`${styles.artist} ${styles.skeletonArtistLine}`}
 							style={{
 								background: "var(--color-border-tertiary)",
 								borderRadius: 4,
 								width: `${60 + (i % 4) * 20}px`,
 								height: 12,
-								marginTop: 4,
 							}}
 						/>
 					</div>

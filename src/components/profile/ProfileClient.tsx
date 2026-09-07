@@ -3,23 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { config } from "@/lib/config";
-import { marked } from "marked";
-
-marked.use({ breaks: true, gfm: true } as Parameters<typeof marked.use>[0]);
-function renderBio(text: string): string {
-	return marked.parse(text) as string;
-}
-
-function formatJoinDate(iso: string, exact: boolean): string {
-	const d = new Date(iso);
-	if (exact) {
-		const dd = String(d.getDate()).padStart(2, "0");
-		const mm = String(d.getMonth() + 1).padStart(2, "0");
-		const yyyy = d.getFullYear();
-		return `${mm}/${dd}/${yyyy}`;
-	}
-	return `Joined ${d.toLocaleDateString("en-US", { month: "long", year: "numeric" })}`;
-}
 import { useAuth } from "@/lib/auth";
 import { useLikes, type TrackLikeMeta } from "@/lib/supabase/likesContext";
 import { usePlayer } from "@/lib/miniplayer/context";
@@ -28,9 +11,7 @@ import {
 	ensureTracksLoaded,
 	subscribeStore,
 	getStoreSnapshot,
-	findTrackById,
 } from "@/lib/track/trackStore";
-import { TRACK_META } from "@/lib/fckcensor";
 import { syncGitHubMeta, syncGithubStar } from "@/lib/supabase/publicProfile";
 import {
 	getPlaylistTracks,
@@ -44,6 +25,11 @@ import { cx } from "@/lib/cx";
 import styles from "./profile.module.scss";
 import { useProfileBio } from "@/lib/profile/useProfileBio";
 import { useProfilePlaylists } from "@/lib/profile/useProfilePlaylists";
+import {
+	renderBio,
+	formatJoinDate,
+	resolveTrackMeta,
+} from "@/lib/profile/profileHelpers";
 
 function trackHref(trackId: string, dbMeta?: TrackLikeMeta): string {
 	if (trackId.endsWith("-e")) return `/track?key=${trackId}`;
@@ -70,31 +56,6 @@ function trackHref(trackId: string, dbMeta?: TrackLikeMeta): string {
 	}
 
 	return `/track?id=${trackId}`;
-}
-
-function resolveTrackMeta(
-	trackId: string,
-	likedMeta?: Map<string, TrackLikeMeta>,
-) {
-	const meta = TRACK_META[trackId];
-	if (meta) return meta;
-	const stored = findTrackById(trackId);
-	if (stored)
-		return { title: stored.title, artist: stored.artist, cover: stored.cover };
-	const db = likedMeta?.get(trackId);
-	if (db?.title || db?.artist || db?.cover)
-		return { title: db.title, artist: db.artist, cover: db.cover };
-	// Stable keys encode title/artist/cover inside them - decode as last resort
-	if (!trackId.startsWith("http")) {
-		const decoded = decodeTrackKey(trackId);
-		if (decoded?.title || decoded?.artist)
-			return {
-				title: decoded.title,
-				artist: decoded.artist,
-				cover: decoded.cover,
-			};
-	}
-	return null;
 }
 
 function PlaylistSection({
@@ -557,7 +518,7 @@ export default function ProfileClient() {
 								<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
 								<circle cx="12" cy="7" r="4" />
 							</svg>
-							<span className={styles.statLabel} style={{ flex: 1 }}>
+							<span className={`${styles.statLabel} ${styles.statLabelGrow}`}>
 								Public profile
 							</span>
 						</button>
@@ -673,16 +634,13 @@ export default function ProfileClient() {
 										) : bioLoading ? (
 											<div className={styles.bioSkeleton}>
 												<span
-													className={styles.skeletonLine}
-													style={{ width: "72%" }}
+													className={`${styles.skeletonLine} ${styles.skeletonLine72}`}
 												/>
 												<span
-													className={styles.skeletonLine}
-													style={{ width: "55%" }}
+													className={`${styles.skeletonLine} ${styles.skeletonLine55}`}
 												/>
 												<span
-													className={styles.skeletonLine}
-													style={{ width: "64%" }}
+													className={`${styles.skeletonLine} ${styles.skeletonLine64}`}
 												/>
 											</div>
 										) : bio ? (
@@ -700,7 +658,9 @@ export default function ProfileClient() {
 										<div className={styles.separator}></div>
 									</section>
 
-									<section className={styles.section} style={{ marginTop: 20 }}>
+									<section
+										className={`${styles.section} ${styles.sectionSpaced}`}
+									>
 										<div className={styles.sectionHeader}>
 											<h2 className={styles.sectionTitle}>Pinned Playlists</h2>
 											<button
@@ -717,7 +677,7 @@ export default function ProfileClient() {
 													strokeWidth="2.5"
 													strokeLinecap="round"
 													strokeLinejoin="round"
-													style={{ marginLeft: 4 }}
+													className={styles.chevronInline}
 												>
 													<path d="M9 18l6-6-6-6" />
 												</svg>

@@ -143,6 +143,10 @@
 		background 0.25s;
 }
 
+.svgBlock {
+	display: block;
+}
+
 @include bp.tablet {
 	.content {
 		grid-template-columns: 1fr 1fr;

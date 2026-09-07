@@ -233,3 +233,26 @@
 	color: var(--muted);
 	font-size: 14px;
 }
+
+.spacer {
+	position: relative;
+}
+
+.content {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+
+.idFallback {
+	opacity: 0.45;
+}
+
+.skeletonRow {
+	opacity: 0.4;
+}
+
+.skeletonArtistLine {
+	margin-top: 4px;
+}

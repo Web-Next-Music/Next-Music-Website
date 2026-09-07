@@ -7,14 +7,12 @@ import {
 	useRef,
 	useCallback,
 	useMemo,
-	memo,
 	startTransition,
 } from "react";
 import { useAuth } from "@/lib/auth";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import notFoundStyles from "../not-found.module.scss";
 import {
 	checkDDetectorAccess,
 	fetchDDetectorTracks,
@@ -26,165 +24,15 @@ import {
 	type DDetectorTrack,
 	type LyricLine,
 } from "@/lib/track/ddetector";
+import { hasDrugWord, escHtml, highlightDrugs } from "@/lib/track/drugDetector";
 import Select from "@components/ui/Select";
 import styles from "./page.module.scss";
-import DRUG_KEYWORDS from "./drug-keywords.json";
-// Build a single regex from all keywords (longer first to prevent partial shadowing)
-const _DRUG_ALT = [...DRUG_KEYWORDS]
-	.sort((a, b) => b.length - a.length)
-	.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-	.join("|");
-const _W = "[\\wа-яёА-ЯЁ]"; // word-character class including Cyrillic
-
-// Detect: keyword must stand alone (not surrounded by word chars on both sides)
-const DRUG_DETECT_RE = new RegExp(`(?<!${_W})(${_DRUG_ALT})(?!${_W})`, "i");
-// Highlight: match the full word that contains any drug keyword
-const DRUG_HIGHLIGHT_RE = new RegExp(
-	`(?<!${_W})${_W}*(?:${_DRUG_ALT})${_W}*(?!${_W})`,
-	"gi",
-);
-const MARK = '<mark class="drugMark">$&</mark>';
-
-function hasDrugWord(text: string): boolean {
-	DRUG_DETECT_RE.lastIndex = 0;
-	return DRUG_DETECT_RE.test(text);
-}
-
-function escHtml(s: string): string {
-	return s
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
-}
-
-function highlightDrugs(rawText: string): string {
-	return escHtml(rawText).replace(DRUG_HIGHLIGHT_RE, MARK);
-}
-
-// 404
-function NotFoundView() {
-	return (
-		<main className={notFoundStyles.main}>
-			<div className={notFoundStyles.wave} aria-hidden>
-				{Array.from({ length: 32 }).map((_, i) => (
-					<div
-						key={i}
-						className={notFoundStyles.bar}
-						style={
-							{
-								"--h": `${20 + Math.abs(Math.sin(i * 0.7) * 60)}%`,
-								"--delay": `${i * 0.05}s`,
-							} as React.CSSProperties
-						}
-					/>
-				))}
-			</div>
-			<div className={notFoundStyles.content}>
-				<div className={notFoundStyles.code}>404</div>
-				<h1 className={notFoundStyles.title}>Page not found</h1>
-				<p className={notFoundStyles.desc}>
-					It looks like this page has been deleted or never existed
-				</p>
-				<div className={notFoundStyles.actions}>
-					<Link href="/" className={notFoundStyles.btnPrimary}>
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-							<path
-								d="M19 12H5M5 12l7-7M5 12l7 7"
-								stroke="currentColor"
-								strokeWidth="2"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-							/>
-						</svg>
-						To the homepage
-					</Link>
-				</div>
-			</div>
-		</main>
-	);
-}
-
-// Track badge
-type TrackStatus = "pending" | "found" | "none" | "error";
-
-const BADGE_CFG: Record<TrackStatus, { cls: string; label: string }> = {
-	pending: { cls: styles.badgePending, label: "…" },
-	found: { cls: styles.badgeFound, label: "found" },
-	none: { cls: styles.badgeNone, label: "clean" },
-	error: { cls: styles.badgeError, label: "no lyrics" },
-};
-
-interface DrugCard {
-	track: DDetectorTrack;
-	lines: Array<{ ts: string | null; html: string }>;
-	allLines?: Array<{ ts: string | null; html: string; isDrug: boolean }>;
-}
-
-function handleCoverError(e: React.SyntheticEvent<HTMLImageElement>) {
-	(e.currentTarget.parentNode as HTMLElement).innerHTML =
-		`<div class="${styles.coverPh}">♪</div>`;
-}
-
-interface ContextMenuState {
-	x: number;
-	y: number;
-	track: DDetectorTrack;
-	hasAllLines?: boolean;
-}
-
-interface TrackRowProps {
-	track: DDetectorTrack;
-	index: number;
-	status: TrackStatus;
-	date: string | undefined;
-	isActive: boolean;
-	isIgnored: boolean;
-	onClick: (track: DDetectorTrack) => void;
-	onContextMenu: (e: React.MouseEvent, track: DDetectorTrack) => void;
-}
-
-const TrackRow = memo(function TrackRow({
-	track,
-	index,
-	status,
-	date,
-	isActive,
-	isIgnored,
-	onClick,
-	onContextMenu,
-}: TrackRowProps) {
-	const badge = BADGE_CFG[status];
-	return (
-		<div
-			className={`${styles.track}${isActive ? ` ${styles.trackActive}` : ""}${isIgnored ? ` ${styles.trackIgnored}` : ""}`}
-			onClick={() => onClick(track)}
-			onContextMenu={(e) => onContextMenu(e, track)}
-		>
-			<span className={styles.trackNum}>{index + 1}</span>
-			<div className={styles.cover}>
-				{track.cover ? (
-					<img
-						src={track.cover}
-						alt=""
-						loading="lazy"
-						onError={handleCoverError}
-					/>
-				) : (
-					<div className={styles.coverPh}>♪</div>
-				)}
-			</div>
-			<div className={styles.trackInfo}>
-				<div className={styles.trackTitle}>{track.title}</div>
-				<div className={styles.trackArtist}>
-					{track.artist && <span>{track.artist}</span>}
-				</div>
-			</div>
-			{date && <span className={styles.trackDateBadge}>{date}</span>}
-			<span className={`${styles.badge} ${badge.cls}`}>{badge.label}</span>
-		</div>
-	);
-});
+import NotFoundView from "@/components/ddetector/NotFoundView";
+import TrackRow, {
+	type TrackStatus,
+	type DrugCard,
+	type ContextMenuState,
+} from "@/components/ddetector/TrackRow";
 
 // Main page
 export default function DDetectorPage() {
